@@ -1,0 +1,938 @@
+@page "/acciones/edit/{Id:int}"
+@inject AccionService AccionService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject AppDbContext DbContext
+@inject IEmailService EmailService
+@inject IFileService FileService
+@rendermode InteractiveServer
+
+@using ActividadApp.Data
+@using ActividadApp.Models
+@using ActividadApp.Services
+@using ActividadApp.Services.Email
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Editar Accion</PageTitle>
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Editar Accion</h2>
+        <a href="/acciones" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Volver
+        </a>
+    </div>
+
+    @if (isLoadingData)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2">Cargando accion...</p>
+        </div>
+    }
+    else if (accion == null)
+    {
+        <div class="alert alert-danger">
+            No se encontro la accion solicitada.
+        </div>
+        <a href="/acciones" class="btn btn-secondary">Volver</a>
+    }
+    else
+    {
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger" role="alert">
+                <i class="bi bi-exclamation-circle me-2"></i>@errorMessage
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+            <div class="alert alert-success" role="alert">
+                <i class="bi bi-check-circle me-2"></i>@successMessage
+            </div>
+        }
+
+        <!-- SECCION 1: Informacion General (Solo lectura) -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <i class="bi bi-info-circle me-2"></i>1. Informacion General
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-2 mb-3">
+                        <label class="form-label">Persona que reporta</label>
+                        <input type="text" class="form-control" value="@(accion.Usuario?.Username ?? username)" readonly />
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label class="form-label">Fecha</label>
+                        <input type="text" class="form-control" value="@accion.Fecha.ToString("dd/MM/yyyy")" readonly />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Tipo de Accion</label>
+                        <input type="text" class="form-control" value="@TipoAccionTexto" readonly />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Organizacion</label>
+                        <input type="text" class="form-control" value="@NombreMaestro(organizaciones, accion.OrganizacionId)" readonly />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Origen</label>
+                        <input type="text" class="form-control" value="@NombreMaestro(origenes, accion.OrigenId)" readonly />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Proceso</label>
+                        <input type="text" class="form-control" value="@NombreProceso" readonly />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Responsable del Proceso</label>
+                        <input type="text" class="form-control" value="@nombreResponsable" readonly />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Entidad</label>
+                        <input type="text" class="form-control" value="@NombreMaestro(entidades, accion.EntidadId)" readonly />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Sistema de Gestion</label>
+                        <input type="text" class="form-control" value="@NombreMaestro(sistemasGestion, accion.SistemaGestionId)" readonly />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Sitio</label>
+                        <input type="text" class="form-control" value="@NombreMaestro(sitios, accion.SitioId)" readonly />
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Descripcion del hallazgo</label>
+                        <textarea class="form-control" rows="3" readonly>@accion.Descripcion</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEGUIMIENTO SGI (Solo administradores) -->
+        @if (esAdmin)
+        {
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-journal-text me-2"></i>Seguimiento SGI</span>
+                <div class="form-check form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" @bind="mostrarSeguimientoSgi" />
+                    <label class="form-check-label text-white">Mostrar</label>
+                </div>
+            </div>
+            @if (mostrarSeguimientoSgi)
+            {
+                <div class="card-body">
+                    <!-- Formulario nuevo seguimiento -->
+                    <div class="row mb-3">
+                        <div class="col-md-9">
+                            <textarea class="form-control form-control-sm" rows="2" @bind="nuevoComentarioSgi"
+                                      placeholder="Escriba un comentario de seguimiento..."></textarea>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="button" class="btn btn-sm btn-dark w-100" @onclick="AgregarSeguimientoSgi"
+                                    disabled="@string.IsNullOrWhiteSpace(nuevoComentarioSgi)">
+                                <i class="bi bi-plus-circle me-1"></i>Agregar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Lista de seguimientos -->
+                    @if (seguimientosSgi.Any())
+                    {
+                        <div class="list-group">
+                            @foreach (var seg in seguimientosSgi.OrderByDescending(s => s.Fecha))
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <p class="mb-1">@seg.Comentario</p>
+                                            <small class="text-muted">
+                                                <i class="bi bi-person me-1"></i>@(seg.Usuario?.Nombre ?? username)
+                                                <i class="bi bi-calendar ms-2 me-1"></i>@seg.Fecha.ToString("dd/MM/yyyy HH:mm")
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted fst-italic mb-0">Sin seguimientos registrados.</p>
+                    }
+                </div>
+            }
+        </div>
+        }
+
+        <!-- SECCION 2: Solucion -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-lightbulb me-2"></i>2. Solucion</span>
+                <div class="form-check form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" @bind="incluirSolucion" />
+                    <label class="form-check-label text-white">Incluir</label>
+                </div>
+            </div>
+            @if (incluirSolucion)
+            {
+                <div class="card-body">
+                    @if (tieneSolucionGuardada)
+                    {
+                        <!-- Campos de solo lectura cuando la solucion ya existe -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Analisis de Causa o Proposito de mejora</label>
+                                <textarea class="form-control" rows="3" readonly>@solucion.AnalisisCausa</textarea>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Correccion Propuesta</label>
+                                <textarea class="form-control" rows="3" readonly>@solucion.CorreccionPropuesta</textarea>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Investigador</label>
+                                <input type="text" class="form-control" value="@NombreUsuario(solucion.UsuarioInvestigaId)" readonly />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Fecha Investigacion</label>
+                                <input type="text" class="form-control" value="@solucion.FechaInvestigacion.ToString("dd/MM/yyyy")" readonly />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Coordinador</label>
+                                <input type="text" class="form-control" value="@NombreUsuario(solucion.UsuarioCoordinaId)" readonly />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Fecha Compromiso</label>
+                                <input type="text" class="form-control" value="@solucion.FechaCompromiso.ToString("dd/MM/yyyy")" readonly />
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Campos editables cuando es nueva solucion -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Analisis de Causa o Proposito de mejora <span class="text-danger">*</span></label>
+                                <textarea class="form-control" @bind="solucion.AnalisisCausa" rows="3"></textarea>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Correccion Propuesta <span class="text-danger">*</span></label>
+                                <textarea class="form-control" @bind="solucion.CorreccionPropuesta" rows="3"></textarea>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Investigador <span class="text-danger">*</span></label>
+                                <select class="form-select" @bind="solucion.UsuarioInvestigaId">
+                                    <option value="0">Seleccionar...</option>
+                                    @foreach (var u in usuarios)
+                                    {
+                                        <option value="@u.Id">@u.Nombre</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Fecha Investigacion <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" @bind="fechaInvestigacion" />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Coordinador <span class="text-danger">*</span></label>
+                                <select class="form-select" @bind="solucion.UsuarioCoordinaId">
+                                    <option value="0">Seleccionar...</option>
+                                    @foreach (var u in usuarios)
+                                    {
+                                        <option value="@u.Id">@u.Nombre</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Fecha Compromiso <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" @bind="fechaCompromiso" />
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Actividades del Plan -->
+                    <hr />
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0"><i class="bi bi-list-task me-1"></i>Actividades del Plan</h6>
+                        @if (!tieneConfirmacionGuardada && !tieneSolucionGuardada)
+                        {
+                            <button type="button" class="btn btn-sm btn-outline-success" @onclick="AgregarActividad">
+                                <i class="bi bi-plus-circle me-1"></i>Agregar
+                            </button>
+                        }
+                    </div>
+                    @if (actividades.Any())
+                    {
+                        @if (tieneSolucionGuardada && !tieneConfirmacionGuardada)
+                        {
+                            <!-- Modo seguimiento: tarjetas por actividad -->
+                            @for (int i = 0; i < actividades.Count; i++)
+                            {
+                                var index = i;
+                                var act = actividades[index];
+                                <div class="card mb-3 @(act.Ejecutada ? "border-success" : "border-warning")">
+                                    <div class="card-header d-flex justify-content-between align-items-center @(act.Ejecutada ? "bg-success bg-opacity-10" : "bg-warning bg-opacity-10")">
+                                        <span>
+                                            <i class="bi @(act.Ejecutada ? "bi-check-circle-fill text-success" : "bi-clock text-warning") me-2"></i>
+                                            <strong>@act.Descripcion</strong>
+                                        </span>
+                                        <span class="badge @(act.Ejecutada ? "bg-success" : "bg-warning text-dark")">
+                                            @(act.Ejecutada ? "Ejecutada" : "Pendiente")
+                                        </span>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-3 mb-2">
+                                                <strong class="d-block text-muted small">Responsable</strong>
+                                                <span>@NombreUsuario(act.ResponsableId)</span>
+                                            </div>
+                                            <div class="col-md-2 mb-2">
+                                                <strong class="d-block text-muted small">Agencia</strong>
+                                                <span>@act.Agencia</span>
+                                            </div>
+                                            <div class="col-md-2 mb-2">
+                                                <strong class="d-block text-muted small">Fecha compromiso</strong>
+                                                <span>@act.Fecha.ToString("dd/MM/yyyy")</span>
+                                            </div>
+                                            <div class="col-md-2 mb-2">
+                                                <label class="form-label text-muted small mb-0"><strong>Fecha ejecucion</strong></label>
+                                                <input type="date" class="form-control form-control-sm"
+                                                       @bind="actividades[index].FechaEjecucion"
+                                                       disabled="@act.Ejecutada" />
+                                            </div>
+                                            <div class="col-md-3 mb-2">
+                                                <label class="form-label text-muted small mb-0"><strong>Ejecutada</strong></label>
+                                                <div class="form-check form-switch mt-1">
+                                                    <input class="form-check-input" type="checkbox"
+                                                           @bind="actividades[index].Ejecutada"
+                                                           disabled="@act.Ejecutada" />
+                                                    <label class="form-check-label">@(act.Ejecutada ? "Si" : "No")</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <label class="form-label text-muted small mb-0"><strong>Observaciones</strong></label>
+                                                <textarea class="form-control form-control-sm" rows="2"
+                                                          @bind="actividades[index].Observaciones"
+                                                          disabled="@act.Ejecutada"
+                                                          placeholder="Observaciones del seguimiento..."></textarea>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <label class="form-label text-muted small mb-0"><strong>Evidencia</strong></label>
+                                                @if (!string.IsNullOrEmpty(act.RutaEvidencia))
+                                                {
+                                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                                        <a href="/@act.RutaEvidencia" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                            <i class="bi bi-file-earmark me-1"></i>@(act.NombreArchivoEvidencia ?? "Ver evidencia")
+                                                        </a>
+                                                        @if (!act.Ejecutada)
+                                                        {
+                                                            <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => EliminarEvidencia(index)">
+                                                                <i class="bi bi-x-circle"></i>
+                                                            </button>
+                                                        }
+                                                    </div>
+                                                }
+                                                else if (!act.Ejecutada)
+                                                {
+                                                    <InputFile class="form-control form-control-sm mt-1"
+                                                               OnChange="(e) => SubirEvidencia(e, index)"
+                                                               accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.zip,.rar" />
+                                                    @if (uploadingIndex == index)
+                                                    {
+                                                        <small class="text-muted"><i class="bi bi-arrow-repeat spin me-1"></i>Subiendo...</small>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted small mt-1 d-block">Sin evidencia</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <!-- Modo tabla: edicion o solo lectura -->
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Descripcion</th>
+                                            <th>Agencia</th>
+                                            <th>Responsable</th>
+                                            <th>Fecha</th>
+                                            @if (tieneConfirmacionGuardada)
+                                            {
+                                                <th>Estado</th>
+                                                <th>Ejecucion</th>
+                                                <th>Evidencia</th>
+                                            }
+                                            else
+                                            {
+                                                <th style="width:60px"></th>
+                                            }
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (int i = 0; i < actividades.Count; i++)
+                                        {
+                                            var index = i;
+                                            <tr>
+                                                @if (tieneConfirmacionGuardada)
+                                                {
+                                                    <td>@actividades[index].Descripcion</td>
+                                                    <td>@actividades[index].Agencia</td>
+                                                    <td>@NombreUsuario(actividades[index].ResponsableId)</td>
+                                                    <td>@actividades[index].Fecha.ToString("dd/MM/yyyy")</td>
+                                                    <td>
+                                                        <span class="badge @(actividades[index].Ejecutada ? "bg-success" : "bg-warning text-dark")">
+                                                            @(actividades[index].Ejecutada ? "Ejecutada" : "Pendiente")
+                                                        </span>
+                                                    </td>
+                                                    <td>@(actividades[index].FechaEjecucion?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                                    <td>
+                                                        @if (!string.IsNullOrEmpty(actividades[index].RutaEvidencia))
+                                                        {
+                                                            <a href="/@actividades[index].RutaEvidencia" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                                <i class="bi bi-file-earmark"></i>
+                                                            </a>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-muted">-</span>
+                                                        }
+                                                    </td>
+                                                }
+                                                else
+                                                {
+                                                    <td><input class="form-control form-control-sm" @bind="actividades[index].Descripcion" /></td>
+                                                    <td><input class="form-control form-control-sm" @bind="actividades[index].Agencia" /></td>
+                                                    <td>
+                                                        <select class="form-select form-select-sm" @bind="actividades[index].ResponsableId">
+                                                            <option value="0">Seleccionar...</option>
+                                                            @foreach (var u in usuarios)
+                                                            {
+                                                                <option value="@u.Id">@u.Nombre</option>
+                                                            }
+                                                        </select>
+                                                    </td>
+                                                    <td><input type="date" class="form-control form-control-sm" @bind="actividades[index].Fecha" /></td>
+                                                    <td>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => EliminarActividad(index)">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                }
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+
+                        @if (tieneSolucionGuardada && !tieneConfirmacionGuardada)
+                        {
+                            <div class="alert alert-info mt-2 mb-0 py-2">
+                                <small>
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Actividades ejecutadas: <strong>@actividades.Count(a => a.Ejecutada)</strong> de <strong>@actividades.Count</strong>
+                                    @if (actividades.All(a => a.Ejecutada))
+                                    {
+                                        <span class="text-success ms-2"><i class="bi bi-check-circle-fill me-1"></i>Todas ejecutadas</span>
+                                    }
+                                </small>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted fst-italic">Sin actividades agregadas.</p>
+                    }
+                </div>
+            }
+        </div>
+
+        @if (tieneSolucionGuardada)
+        {
+        <!-- SECCION 3: Confirmacion Plan de Accion -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-clipboard-check me-2"></i>3. Confirmacion del Plan de Accion</span>
+                <div class="form-check form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" @bind="incluirConfirmacion" />
+                    <label class="form-check-label">Incluir</label>
+                </div>
+            </div>
+            @if (incluirConfirmacion)
+            {
+                <div class="card-body">
+                    @if (tieneConfirmacionGuardada)
+                    {
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Detalles de Cumplimiento</label>
+                                <textarea class="form-control" rows="3" readonly>@confirmacion.DetallesCumplimiento</textarea>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Fecha</label>
+                                <input type="text" class="form-control" value="@confirmacion.Fecha.ToString("dd/MM/yyyy")" readonly />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Responsable</label>
+                                <input type="text" class="form-control" value="@NombreUsuario(confirmacion.ResponsableId)" readonly />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Cumplio el Plan</label>
+                                <div class="mt-2">
+                                    @if (confirmacion.CumplioPlan)
+                                    {
+                                        <span class="badge bg-success">Si</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">No</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Detalles de Cumplimiento <span class="text-danger">*</span></label>
+                                <textarea class="form-control" @bind="confirmacion.DetallesCumplimiento" rows="3"></textarea>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Fecha <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" @bind="fechaConfirmacion" />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Responsable <span class="text-danger">*</span></label>
+                                <select class="form-select" @bind="confirmacion.ResponsableId">
+                                    <option value="0">Seleccionar...</option>
+                                    @foreach (var u in usuarios)
+                                    {
+                                        <option value="@u.Id">@u.Nombre</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Cumplio el Plan</label>
+                                <div class="form-check form-switch mt-2">
+                                    <input class="form-check-input" type="checkbox" @bind="confirmacion.CumplioPlan" />
+                                    <label class="form-check-label">@(confirmacion.CumplioPlan ? "Si" : "No")</label>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+        }
+
+        @if (tieneConfirmacionGuardada)
+        {
+        <!-- SECCION 4: Eficacia -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-graph-up me-2"></i>4. Eficacia</span>
+                <div class="form-check form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" @bind="incluirEficacia" />
+                    <label class="form-check-label text-white">Incluir</label>
+                </div>
+            </div>
+            @if (incluirEficacia)
+            {
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Dias para verificar <span class="text-danger">*</span></label>
+                            <select class="form-select" @bind="eficacia.DiasParaVerificar">
+                                <option value="20">20 dias</option>
+                                <option value="40">40 dias</option>
+                                <option value="60">60 dias</option>
+                                <option value="90">90 dias</option>
+                                <option value="120">120 dias</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Comentarios <span class="text-danger">*</span></label>
+                            <textarea class="form-control" @bind="eficacia.Comentarios" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Fecha <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" @bind="fechaEficacia" />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Responsable <span class="text-danger">*</span></label>
+                            <select class="form-select" @bind="eficacia.ResponsableId">
+                                <option value="0">Seleccionar...</option>
+                                @foreach (var u in usuarios)
+                                {
+                                    <option value="@u.Id">@u.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Resultado</label>
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" @bind="eficacia.Eficaz" />
+                                <label class="form-check-label">@(eficacia.Eficaz ? "Eficaz" : "No Eficaz")</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        }
+
+        <!-- Boton Guardar -->
+        <div class="d-flex gap-2 mb-5">
+            <button type="button" class="btn btn-warning btn-lg" @onclick="HandleSubmit" disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                    <span>Actualizando...</span>
+                }
+                else
+                {
+                    <i class="bi bi-check-circle me-1"></i>
+                    <span>Actualizar Accion</span>
+                }
+            </button>
+            <a href="/acciones" class="btn btn-secondary btn-lg">Cancelar</a>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private UserSession? userSession;
+    private Accion? accion;
+    private Solucion solucion = new();
+    private ConfirmacionPlanAccion confirmacion = new();
+    private Eficacia eficacia = new();
+    private List<Actividad> actividades = new();
+    private List<SeguimientoSgi> seguimientosSgi = new();
+
+    private DateTime fecha = DateTime.Now;
+    private DateTime fechaInvestigacion = DateTime.Now;
+    private DateTime fechaCompromiso = DateTime.Now;
+    private DateTime fechaConfirmacion = DateTime.Now;
+    private DateTime fechaEficacia = DateTime.Now;
+
+    private bool incluirSolucion = false;
+    private bool incluirConfirmacion = false;
+    private bool incluirEficacia = false;
+    private bool mostrarSeguimientoSgi = false;
+    private bool esAdmin = false;
+    private string nuevoComentarioSgi = string.Empty;
+
+    private bool tieneSolucionGuardada = false;
+    private bool tieneConfirmacionGuardada = false;
+    private int estadoAnterior = 0;
+
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    private bool isLoading = false;
+    private bool isLoadingData = true;
+
+    private string? username;
+    private string nombreResponsable = string.Empty;
+
+    // Dropdowns
+    private List<Maestro> origenes = new();
+    private List<Maestro> entidades = new();
+    private List<Maestro> sistemasGestion = new();
+    private List<Maestro> organizaciones = new();
+    private List<Maestro> sitios = new();
+    private List<Proceso> procesos = new();
+    private List<Usuario> usuarios = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            userSession = await AuthService.GetCurrentUserSession();
+            if (userSession != null)
+            {
+                username = userSession.Username;
+                var user = await DbContext.Users.FirstOrDefaultAsync(u => u.Id == userSession.UserId);
+                esAdmin = user?.RolId == 2;
+            }
+
+            origenes = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.ORIGEN).ToListAsync();
+            entidades = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.ENTIDAD).ToListAsync();
+            sistemasGestion = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.SISGESTION).ToListAsync();
+            organizaciones = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.ORGANIZACION).ToListAsync();
+            sitios = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.SITIO).ToListAsync();
+            procesos = await DbContext.Procesos.Include(p => p.Responsable).ToListAsync();
+            usuarios = await DbContext.Users.ToListAsync();
+
+            await LoadAccion();
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadAccion()
+    {
+        isLoadingData = true;
+        accion = await AccionService.GetById(Id);
+
+        if (accion != null)
+        {
+            fecha = accion.Fecha;
+            estadoAnterior = accion.EstadoId;
+
+            // Precargar seguimientos SGI
+            seguimientosSgi = accion.SeguimientosSgi ?? new();
+
+            // Precargar responsable del proceso
+            var proceso = procesos.FirstOrDefault(p => p.Id == accion.ProcesoId);
+            if (proceso?.Responsable != null)
+            {
+                nombreResponsable = proceso.Responsable.Nombre;
+            }
+
+            // Precargar solucion
+            if (accion.Solucion != null)
+            {
+                incluirSolucion = true;
+                tieneSolucionGuardada = true;
+                solucion = accion.Solucion;
+                fechaInvestigacion = solucion.FechaInvestigacion;
+                fechaCompromiso = solucion.FechaCompromiso;
+                actividades = solucion.Actividades ?? new();
+            }
+
+            // Precargar confirmacion
+            if (accion.ConfirmacionPlanAccion != null)
+            {
+                incluirConfirmacion = true;
+                tieneConfirmacionGuardada = true;
+                confirmacion = accion.ConfirmacionPlanAccion;
+                fechaConfirmacion = confirmacion.Fecha;
+            }
+
+            // Precargar eficacia
+            if (accion.Eficacia != null)
+            {
+                incluirEficacia = true;
+                eficacia = accion.Eficacia;
+                fechaEficacia = eficacia.Fecha;
+            }
+        }
+
+        isLoadingData = false;
+    }
+
+    private void AgregarActividad()
+    {
+        actividades.Add(new Actividad());
+    }
+
+    private void EliminarActividad(int index)
+    {
+        actividades.RemoveAt(index);
+    }
+
+    private async Task AgregarSeguimientoSgi()
+    {
+        if (string.IsNullOrWhiteSpace(nuevoComentarioSgi) || accion == null || userSession == null) return;
+
+        var seguimiento = new SeguimientoSgi
+        {
+            AccionId = accion.Id,
+            UsuarioId = userSession.UserId,
+            Fecha = DateTime.UtcNow,
+            Comentario = nuevoComentarioSgi.Trim()
+        };
+
+        DbContext.SeguimientosSgi.Add(seguimiento);
+        await DbContext.SaveChangesAsync();
+
+        seguimiento.Usuario = await DbContext.Users.FindAsync(userSession.UserId);
+        seguimientosSgi.Add(seguimiento);
+        nuevoComentarioSgi = string.Empty;
+    }
+
+    private int? uploadingIndex = null;
+
+    private async Task SubirEvidencia(InputFileChangeEventArgs e, int index)
+    {
+        var archivo = e.File;
+        if (archivo == null || accion == null) return;
+
+        const long maxSize = 10 * 1024 * 1024; // 10 MB
+        if (archivo.Size > maxSize)
+        {
+            errorMessage = "El archivo no debe superar los 10 MB.";
+            return;
+        }
+
+        uploadingIndex = index;
+        StateHasChanged();
+
+        try
+        {
+            using var stream = archivo.OpenReadStream(maxSize);
+            var (ruta, nombre) = await FileService.GuardarArchivo(stream, archivo.Name, accion.Id, actividades[index].Id);
+            actividades[index].RutaEvidencia = ruta;
+            actividades[index].NombreArchivoEvidencia = nombre;
+        }
+        catch
+        {
+            errorMessage = "Error al subir el archivo. Intente nuevamente.";
+        }
+        finally
+        {
+            uploadingIndex = null;
+            StateHasChanged();
+        }
+    }
+
+    private void EliminarEvidencia(int index)
+    {
+        var act = actividades[index];
+        if (!string.IsNullOrEmpty(act.RutaEvidencia))
+        {
+            FileService.EliminarArchivo(act.RutaEvidencia);
+            act.RutaEvidencia = null;
+            act.NombreArchivoEvidencia = null;
+        }
+    }
+
+    private string NombreMaestro(List<Maestro> lista, int id) =>
+        lista.FirstOrDefault(m => m.Id == id)?.Descripcion ?? "-";
+
+    private string TipoAccionTexto => accion?.TipoAccionId switch
+    {
+        1 => "Preventiva",
+        2 => "Correctiva",
+        3 => "Mejora",
+        _ => "-"
+    };
+
+    private string NombreProceso =>
+        procesos.FirstOrDefault(p => p.Id == (accion?.ProcesoId ?? 0))?.Descripcion ?? "-";
+
+    private string NombreUsuario(int usuarioId) =>
+        usuarios.FirstOrDefault(u => u.Id == usuarioId)?.Nombre ?? "-";
+
+    private async Task HandleSubmit()
+    {
+        if (accion == null) return;
+
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+        isLoading = true;
+
+        try
+        {
+            accion.UpdatedAt = DateTime.UtcNow;
+
+            if (incluirSolucion)
+            {
+                solucion.FechaInvestigacion = fechaInvestigacion;
+                solucion.FechaCompromiso = fechaCompromiso;
+                solucion.Actividades = actividades;
+                accion.Solucion = solucion;
+            }
+
+            if (incluirSolucion && incluirConfirmacion)
+            {
+                confirmacion.Fecha = fechaConfirmacion;
+                accion.ConfirmacionPlanAccion = confirmacion;
+            }
+
+            if (tieneConfirmacionGuardada && incluirEficacia)
+            {
+                eficacia.Fecha = fechaEficacia;
+                accion.Eficacia = eficacia;
+            }
+
+            accion.EstadoId = AccionService.CalcularEstadoId(accion);
+
+            var success = await AccionService.Update(accion);
+
+            if (success)
+            {
+                var consecutivo = $"ACC-{accion.Id:D4}";
+                var proceso = procesos.FirstOrDefault(p => p.Id == accion.ProcesoId);
+                var nuevoEstado = accion.EstadoId;
+
+                // Solucion nueva: correo a responsables de actividades
+                if (nuevoEstado >= 2 && estadoAnterior < 2 && actividades.Any())
+                {
+                    foreach (var act in actividades.Where(a => a.ResponsableId > 0))
+                    {
+                        var usuario = usuarios.FirstOrDefault(u => u.Id == act.ResponsableId);
+                        if (usuario != null)
+                        {
+                            _ = EmailService.EnviarSolucionRegistrada(
+                                usuario.Email, usuario.Nombre,
+                                consecutivo, proceso?.Descripcion ?? "-",
+                                act.Descripcion, act.Agencia, solucion.FechaCompromiso);
+                        }
+                    }
+                }
+
+                // Confirmacion pendiente: correo al investigador
+                if (nuevoEstado >= 3 && estadoAnterior < 3 && solucion.UsuarioInvestigaId > 0)
+                {
+                    var investigador = usuarios.FirstOrDefault(u => u.Id == solucion.UsuarioInvestigaId);
+                    if (investigador != null)
+                    {
+                        _ = EmailService.EnviarConfirmacionPendiente(
+                            investigador.Email, investigador.Nombre,
+                            consecutivo, proceso?.Descripcion ?? "-", accion.Descripcion);
+                    }
+                }
+
+                // Confirmacion hecha: correo a administradores para eficacia
+                if (nuevoEstado == 4 && estadoAnterior < 4)
+                {
+                    var admins = usuarios.Where(u => u.RolId == 2).ToList();
+                    foreach (var admin in admins)
+                    {
+                        _ = EmailService.EnviarEficaciaPendiente(
+                            admin.Email, admin.Nombre,
+                            consecutivo, proceso?.Descripcion ?? "-", accion.Descripcion);
+                    }
+                }
+
+                // Eficacia registrada: correo al responsable del proceso
+                if (nuevoEstado == 5 && estadoAnterior < 5 && proceso?.Responsable != null)
+                {
+                    _ = EmailService.EnviarAccionCerrada(
+                        proceso.Responsable.Email, proceso.Responsable.Nombre,
+                        consecutivo, proceso.Descripcion, accion.Descripcion, eficacia.Eficaz);
+                }
+
+                Navigation.NavigateTo("/acciones");
+            }
+            else
+            {
+                errorMessage = "Error al actualizar la accion. Por favor, intenta nuevamente.";
+            }
+        }
+        catch
+        {
+            errorMessage = "Error inesperado. Por favor, intenta nuevamente.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

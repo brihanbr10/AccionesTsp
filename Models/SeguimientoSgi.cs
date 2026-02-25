@@ -1,0 +1,25 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ActividadApp.Models;
+
+public class SeguimientoSgi
+{
+    [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int Id { get; set; }
+
+    [Required]
+    public int AccionId { get; set; }
+
+    [Required]
+    public int UsuarioId { get; set; }
+
+    [Required]
+    public DateTime Fecha { get; set; } = DateTime.Now;
+
+    [Required]
+    public string Comentario { get; set; } = string.Empty;
+
+    // Relaciones
+    public virtual Usuario Usuario { get; set; }
+}

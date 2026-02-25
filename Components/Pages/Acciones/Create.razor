@@ -1,0 +1,449 @@
+@page "/acciones/create"
+@inject AccionService AccionService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject AppDbContext DbContext
+@inject IEmailService EmailService
+@rendermode InteractiveServer
+
+@using ActividadApp.Data
+@using ActividadApp.Models
+@using ActividadApp.Services.Email
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Nueva Accion</PageTitle>
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Nueva Acción</h2>
+        <a href="/acciones" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Volver
+        </a>
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            <i class="bi bi-exclamation-circle me-2"></i>@errorMessage
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@successMessage
+        </div>
+    }
+
+    <!-- SECCION 1: Informacion General -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <i class="bi bi-info-circle me-2"></i>1. Informacion General
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">Persona que reporta</label>
+                    <input type="text" class="form-control" @bind="username" readonly/>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">Fecha <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" @bind="fecha" />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Tipo de Accion <span class="text-danger">*</span></label>
+                    <div class="mt-2">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="tipoAccion" id="preventiva"
+                                   value="PREVENTIVA" checked="@(accion.TipoAccionId == 1)"
+                                   @onchange="@(() => accion.TipoAccionId = 1)" />
+                            <label class="form-check-label" for="preventiva">Preventiva</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="tipoAccion" id="correctiva"
+                                   value="CORRECTIVA" checked="@(accion.TipoAccionId == 2)"
+                                   @onchange="@(() => accion.TipoAccionId = 2)" />
+                            <label class="form-check-label" for="correctiva">Correctiva</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="tipoAccion" id="mejora"
+                                   value="MEJORA" checked="@(accion.TipoAccionId == 3)"
+                                   @onchange="@(() => accion.TipoAccionId = 3)" />
+                            <label class="form-check-label" for="mejora">Mejora</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Organizacion <span class="text-danger">*</span></label>
+                    <select class="form-select" @bind="accion.OrganizacionId">
+                        <option value="0">Seleccionar...</option>
+                        @foreach (var item in organizaciones)
+                        {
+                            <option value="@item.Id">@item.Descripcion</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Origen <span class="text-danger">*</span></label>
+                    <select class="form-select" @bind="accion.OrigenId">
+                        <option value="0">Seleccionar...</option>
+                        @foreach (var item in origenes)
+                        {
+                            <option value="@item.Id">@item.Descripcion</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Proceso <span class="text-danger">*</span></label>
+                    <select class="form-select" value="@accion.ProcesoId" @onchange="OnProcesoChanged">
+                        <option value="0">Seleccionar...</option>
+                        @foreach (var p in procesos)
+                        {
+                            <option value="@p.Id">@p.Descripcion</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Responsable del Proceso</label>
+                    <input type="text" class="form-control" value="@nombreResponsable" readonly
+                           placeholder="Seleccione un proceso" />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Entidad <span class="text-danger">*</span></label>
+                    <select class="form-select" @bind="accion.EntidadId">
+                        <option value="0">Seleccionar...</option>
+                        @foreach (var item in entidades)
+                        {
+                            <option value="@item.Id">@item.Descripcion</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Sistema de Gestion <span class="text-danger">*</span></label>
+                    <select class="form-select" @bind="accion.SistemaGestionId">
+                        <option value="0">Seleccionar...</option>
+                        @foreach (var item in sistemasGestion)
+                        {
+                            <option value="@item.Id">@item.Descripcion</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Sitio <span class="text-danger">*</span></label>
+                    <select class="form-select" @bind="accion.SitioId">
+                        <option value="0">Seleccionar...</option>
+                        @foreach (var item in sitios)
+                        {
+                            <option value="@item.Id">@item.Descripcion</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-12 mb-3">
+                    <label class="form-label">Descripcion del hallazgo<span class="text-danger">*</span></label>
+                    <textarea class="form-control" @bind="accion.Descripcion" rows="3"
+                              placeholder="Descripcion de la accion"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCION 2: Solucion -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-lightbulb me-2"></i>2. Solucion</span>
+            <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" @bind="incluirSolucion" />
+                <label class="form-check-label text-white">Incluir</label>
+            </div>
+        </div>
+        @if (incluirSolucion)
+        {
+            <div class="card-body">
+                <div class="row">
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Analisis de Causa o Propósito de mejora <span class="text-danger">*</span></label>
+                        <textarea class="form-control" @bind="solucion.AnalisisCausa" rows="3"></textarea>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Correccion Propuesta <span class="text-danger">*</span></label>
+                        <textarea class="form-control" @bind="solucion.CorreccionPropuesta" rows="3"></textarea>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Investigador <span class="text-danger">*</span></label>
+                        <select class="form-select" @bind="solucion.UsuarioInvestigaId">
+                            <option value="0">Seleccionar...</option>
+                            @foreach (var u in usuarios)
+                            {
+                                <option value="@u.Id">@u.Nombre</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Fecha Investigacion <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" @bind="fechaInvestigacion" />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Coordinador <span class="text-danger">*</span></label>
+                        <select class="form-select" @bind="solucion.UsuarioCoordinaId">
+                            <option value="0">Seleccionar...</option>
+                            @foreach (var u in usuarios)
+                            {
+                                <option value="@u.Id">@u.Nombre</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Fecha Compromiso <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" @bind="fechaCompromiso" />
+                    </div>
+                </div>
+
+                <!-- Actividades del Plan -->
+                <hr />
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0"><i class="bi bi-list-task me-1"></i>Actividades del Plan</h6>
+                    <button type="button" class="btn btn-sm btn-outline-success" @onclick="AgregarActividad">
+                        <i class="bi bi-plus-circle me-1"></i>Agregar
+                    </button>
+                </div>
+                @if (actividades.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Descripcion</th>
+                                    <th>Agencia</th>
+                                    <th>Responsable</th>
+                                    <th>Fecha</th>
+                                    <th style="width:60px"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < actividades.Count; i++)
+                                {
+                                    var index = i;
+                                    <tr>
+                                        <td><input class="form-control form-control-sm" @bind="actividades[index].Descripcion" /></td>
+                                        <td><input class="form-control form-control-sm" @bind="actividades[index].Agencia" /></td>
+                                        <td>
+                                            <select class="form-select form-select-sm" @bind="actividades[index].ResponsableId">
+                                                <option value="0">Seleccionar...</option>
+                                                @foreach (var u in usuarios)
+                                                {
+                                                    <option value="@u.Id">@u.Nombre</option>
+                                                }
+                                            </select>
+                                        </td>
+                                        <td><input type="date" class="form-control form-control-sm" @bind="actividades[index].Fecha" /></td>
+                                        <td>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => EliminarActividad(index)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted fst-italic">Sin actividades agregadas.</p>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- Boton Guardar -->
+    <div class="d-flex gap-2 mb-5">
+        <button type="button" class="btn btn-primary btn-lg" @onclick="HandleSubmit" disabled="@isLoading">
+            @if (isLoading)
+            {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                <span>Guardando...</span>
+            }
+            else
+            {
+                <i class="bi bi-check-circle me-1"></i>
+                <span>Guardar Accion</span>
+            }
+        </button>
+        <a href="/acciones" class="btn btn-secondary btn-lg">Cancelar</a>
+    </div>
+</div>
+
+@code {
+    private UserSession userSession;
+    private Accion accion = new();
+    private Solucion solucion = new();
+    private List<Actividad> actividades = new();
+
+    private DateTime fecha = DateTime.Now;
+    private DateTime fechaInvestigacion = DateTime.Now;
+    private DateTime fechaCompromiso = DateTime.Now;
+
+    private bool incluirSolucion = false;
+
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    private bool isLoading = false;
+
+    private string? username;
+    private string nombreResponsable = string.Empty;
+
+    // Dropdowns
+    private List<Maestro> origenes = new();
+    private List<Maestro> entidades = new();
+    private List<Maestro> sistemasGestion = new();
+    private List<Maestro> organizaciones = new();
+    private List<Maestro> sitios = new();
+    private List<Proceso> procesos = new();
+    private List<Usuario> usuarios = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        userSession = await AuthService.GetCurrentUserSession();
+        if (userSession!=null)
+        {
+            username = userSession?.Username;
+        }
+        if (firstRender)
+        {
+            origenes = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.ORIGEN).ToListAsync();
+            entidades = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.ENTIDAD).ToListAsync();
+            sistemasGestion = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.SISGESTION).ToListAsync();
+            organizaciones = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.ORGANIZACION).ToListAsync();
+            sitios = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.SITIO).ToListAsync();
+            procesos = await DbContext.Procesos.Include(p => p.Responsable).ToListAsync();
+            usuarios = await DbContext.Users.ToListAsync();
+            StateHasChanged();
+        }
+    }
+
+    private void AgregarActividad()
+    {
+        actividades.Add(new Actividad());
+    }
+
+    private void EliminarActividad(int index)
+    {
+        actividades.RemoveAt(index);
+    }
+
+    private void OnProcesoChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var procesoId) && procesoId > 0)
+        {
+            accion.ProcesoId = procesoId;
+            var proceso = procesos.FirstOrDefault(p => p.Id == procesoId);
+            if (proceso?.Responsable != null)
+            {
+                nombreResponsable = proceso.Responsable.Nombre;
+                accion.ResponsableId = proceso.Responsable.Id;
+            }
+        }
+        else
+        {
+            accion.ProcesoId = 0;
+            nombreResponsable = string.Empty;
+            accion.ResponsableId = 0;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+        isLoading = true;
+
+        try
+        {
+            if (userSession == null)
+            {
+                errorMessage = "Sesion no valida.";
+                isLoading = false;
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(accion.Descripcion))
+            {
+                errorMessage = "La descripcion es requerida.";
+                isLoading = false;
+                return;
+            }
+
+            if (accion.ProcesoId == 0 || accion.OrigenId == 0 || accion.EntidadId == 0 ||
+                accion.SistemaGestionId == 0 || accion.OrganizacionId == 0 || accion.SitioId == 0 ||
+                accion.ResponsableId == 0)
+            {
+                errorMessage = "Todos los campos de clasificacion son requeridos.";
+                isLoading = false;
+                return;
+            }
+
+            accion.Fecha = fecha;
+            accion.UsuarioId = userSession.UserId;
+
+            if (incluirSolucion)
+            {
+                solucion.FechaInvestigacion = fechaInvestigacion;
+                solucion.FechaCompromiso = fechaCompromiso;
+                solucion.Actividades = actividades;
+                accion.Solucion = solucion;
+            }
+
+            accion.EstadoId = AccionService.CalcularEstadoId(accion);
+
+            var success = await AccionService.Create(accion);
+
+            if (success)
+            {
+                var consecutivo = $"ACC-{accion.Id:D4}";
+                var proceso = procesos.FirstOrDefault(p => p.Id == accion.ProcesoId);
+                var tipoAccion = accion.TipoAccionId switch { 1 => "Preventiva", 2 => "Correctiva", 3 => "Mejora", _ => "-" };
+
+                // Correo al responsable del proceso
+                if (proceso?.Responsable != null)
+                {
+                    _ = EmailService.EnviarAccionCreada(
+                        proceso.Responsable.Email, proceso.Responsable.Nombre,
+                        consecutivo, proceso.Descripcion, accion.Descripcion, tipoAccion, accion.Fecha);
+                }
+
+                // Correos a responsables de actividades si se incluyo solucion
+                if (incluirSolucion && actividades.Any())
+                {
+                    foreach (var act in actividades.Where(a => a.ResponsableId > 0))
+                    {
+                        var usuario = usuarios.FirstOrDefault(u => u.Id == act.ResponsableId);
+                        if (usuario != null)
+                        {
+                            _ = EmailService.EnviarSolucionRegistrada(
+                                usuario.Email, usuario.Nombre,
+                                consecutivo, proceso?.Descripcion ?? "-",
+                                act.Descripcion, act.Agencia, solucion.FechaCompromiso);
+                        }
+                    }
+                }
+
+                Navigation.NavigateTo("/acciones");
+            }
+            else
+            {
+                errorMessage = "Error al crear la accion. Por favor, intenta nuevamente.";
+            }
+        }
+        catch
+        {
+            errorMessage = "Error inesperado. Por favor, intenta nuevamente.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

@@ -1,0 +1,255 @@
+@page "/reportes"
+@rendermode InteractiveServer
+
+@inject ReporteService ReporteService
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject AppDbContext DbContext
+@inject IJSRuntime JS
+
+@using ActividadApp.Data
+@using ActividadApp.Models
+@using ActividadApp.Services
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Reportes</PageTitle>
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-file-earmark-spreadsheet me-2"></i>Reportes</h2>
+        <a href="/acciones" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Volver
+        </a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <i class="bi bi-funnel me-2"></i>Filtros del Reporte
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Fecha Desde <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" @bind="fechaDesde" />
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Fecha Hasta <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" @bind="fechaHasta" />
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Proceso (solo para reporte por proceso)</label>
+                    <select class="form-select" @bind="procesoId">
+                        <option value="0">Todos los procesos</option>
+                        @foreach (var p in procesos)
+                        {
+                            <option value="@p.Id">@p.Descripcion</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            <i class="bi bi-exclamation-circle me-2"></i>@errorMessage
+        </div>
+    }
+
+    <!-- Opciones de reporte -->
+    <div class="row">
+        <!-- General -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-file-earmark-text display-4 text-primary mb-3 d-block"></i>
+                    <h5 class="card-title">Reporte General</h5>
+                    <p class="card-text text-muted">
+                        Descarga el reporte general de las acciones sin detalles de los planes de accion.
+                    </p>
+                    <button class="btn btn-primary" @onclick="DescargarGeneral" disabled="@isLoading">
+                        @if (isLoading && tipoReporte == "general")
+                        {
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                            <span>Generando...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-download me-1"></i>
+                            <span>Descargar Excel</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detallado -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-file-earmark-ruled display-4 text-success mb-3 d-block"></i>
+                    <h5 class="card-title">Reporte Detallado</h5>
+                    <p class="card-text text-muted">
+                        Descarga el reporte con todas las actividades del plan de accion por cada accion.
+                    </p>
+                    <button class="btn btn-success" @onclick="DescargarDetallado" disabled="@isLoading">
+                        @if (isLoading && tipoReporte == "detallado")
+                        {
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                            <span>Generando...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-download me-1"></i>
+                            <span>Descargar Excel</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Por Proceso -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-diagram-3 display-4 text-warning mb-3 d-block"></i>
+                    <h5 class="card-title">Reporte por Proceso</h5>
+                    <p class="card-text text-muted">
+                        Descarga solo las acciones del proceso seleccionado, indiferente de las agencias.
+                    </p>
+                    <button class="btn btn-warning" @onclick="DescargarPorProceso" disabled="@(isLoading || procesoId == 0)">
+                        @if (isLoading && tipoReporte == "proceso")
+                        {
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                            <span>Generando...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-download me-1"></i>
+                            <span>Descargar Excel</span>
+                        }
+                    </button>
+                    @if (procesoId == 0)
+                    {
+                        <small class="d-block text-muted mt-2">Seleccione un proceso primero</small>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private DateTime fechaDesde = new DateTime(DateTime.Now.Year, 1, 1);
+    private DateTime fechaHasta = DateTime.Now;
+    private int procesoId = 0;
+    private bool isLoading = false;
+    private string tipoReporte = string.Empty;
+    private string errorMessage = string.Empty;
+
+    private List<Proceso> procesos = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var isAuthenticated = await AuthService.IsAuthenticated();
+            if (!isAuthenticated)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            procesos = await DbContext.Procesos.Include(p => p.Responsable).ToListAsync();
+            StateHasChanged();
+        }
+    }
+
+    private bool ValidarFechas()
+    {
+        errorMessage = string.Empty;
+        if (fechaDesde > fechaHasta)
+        {
+            errorMessage = "La fecha desde no puede ser mayor que la fecha hasta.";
+            return false;
+        }
+        return true;
+    }
+
+    private async Task DescargarGeneral()
+    {
+        if (!ValidarFechas()) return;
+        tipoReporte = "general";
+        isLoading = true;
+
+        try
+        {
+            var bytes = await ReporteService.GenerarReporteGeneral(fechaDesde, fechaHasta);
+            var fileName = $"Reporte_General_{fechaDesde:yyyyMMdd}_{fechaHasta:yyyyMMdd}.xlsx";
+            await DescargarArchivo(bytes, fileName);
+        }
+        catch
+        {
+            errorMessage = "Error al generar el reporte. Intente nuevamente.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task DescargarDetallado()
+    {
+        if (!ValidarFechas()) return;
+        tipoReporte = "detallado";
+        isLoading = true;
+
+        try
+        {
+            var bytes = await ReporteService.GenerarReporteDetallado(fechaDesde, fechaHasta);
+            var fileName = $"Reporte_Detallado_{fechaDesde:yyyyMMdd}_{fechaHasta:yyyyMMdd}.xlsx";
+            await DescargarArchivo(bytes, fileName);
+        }
+        catch
+        {
+            errorMessage = "Error al generar el reporte. Intente nuevamente.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task DescargarPorProceso()
+    {
+        if (!ValidarFechas()) return;
+        if (procesoId == 0) return;
+        tipoReporte = "proceso";
+        isLoading = true;
+
+        try
+        {
+            var bytes = await ReporteService.GenerarReportePorProceso(fechaDesde, fechaHasta, procesoId);
+            var proceso = procesos.FirstOrDefault(p => p.Id == procesoId);
+            var nombreProceso = proceso?.Descripcion?.Replace(" ", "_") ?? "Proceso";
+            var fileName = $"Reporte_{nombreProceso}_{fechaDesde:yyyyMMdd}_{fechaHasta:yyyyMMdd}.xlsx";
+            await DescargarArchivo(bytes, fileName);
+        }
+        catch
+        {
+            errorMessage = "Error al generar el reporte. Intente nuevamente.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task DescargarArchivo(byte[] bytes, string fileName)
+    {
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("downloadFile", fileName, base64);
+    }
+}

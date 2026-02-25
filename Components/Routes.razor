@@ -1,0 +1,22 @@
+@using Microsoft.AspNetCore.Components.Authorization
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
+        </Found>
+        <NotFound>
+            <PageTitle>No encontrado</PageTitle>
+            <LayoutView Layout="@typeof(Layout.MainLayout)">
+                <div class="container mt-5">
+                    <div class="alert alert-warning">
+                        <h4>Página no encontrada</h4>
+                        <p>Lo sentimos, no pudimos encontrar la página que buscas.</p>
+                        <a href="/" class="btn btn-primary">Ir al inicio</a>
+                    </div>
+                </div>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
+

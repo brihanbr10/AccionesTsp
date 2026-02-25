@@ -1,0 +1,432 @@
+@page "/acciones"
+@rendermode InteractiveServer
+
+@inject AccionService ActividadService
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject AppDbContext DbContext
+
+@using ActividadApp.Data
+@using ActividadApp.Models
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Acciones</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Lista de Acciones</h2>
+    <div class="d-flex gap-2">
+        <a href="/reportes" class="btn btn-outline-success">
+            <i class="bi bi-file-earmark-spreadsheet me-1"></i>Reportes
+        </a>
+        <a href="/acciones/create" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nueva Accion
+        </a>
+    </div>
+</div>
+
+@if (isLoading)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="mt-2">Cargando acciones...</p>
+    </div>
+}
+else if (!acciones.Any())
+{
+    <div class="alert alert-info">
+        <h4 class="alert-heading">No hay acciones</h4>
+        <p>Aun no has creado ninguna accion. Haz clic en "Nueva Accion" para comenzar.</p>
+    </div>
+}
+else
+{
+    <div class="accordion" id="accordionAcciones">
+        @foreach (var accion in acciones)
+        {
+            var collapseId = $"collapse-{accion.Id}";
+            var headingId = $"heading-{accion.Id}";
+
+            <div class="accordion-item mb-2 border rounded shadow-sm">
+                <h2 class="accordion-header" id="@headingId">
+                    <button class="accordion-button collapsed" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#@collapseId"
+                            aria-expanded="false" aria-controls="@collapseId">
+                        <div class="d-flex w-100 justify-content-between align-items-center me-3">
+                            <div>
+                                <strong class="me-3">ACC-@accion.Id</strong>
+                                <span>@accion.Descripcion</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-secondary">@accion.Fecha.ToString("dd/MM/yyyy")</span>
+                                <span class="badge bg-info text-dark">@(accion.Usuario?.Username ?? "-")</span>
+                                <span class="badge @BadgeEstado(accion.EstadoId)">
+                                    @(accion.Estado?.Descripcion ?? "-")
+                                </span>
+                            </div>
+                        </div>
+                    </button>
+                </h2>
+                <div id="@collapseId" class="accordion-collapse collapse" aria-labelledby="@headingId">
+                    <div class="accordion-body">
+
+                        <!-- Informacion General -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-info-circle me-2"></i>Informacion General</span>
+                                <div>
+                                    <a href="/acciones/edit/@accion.Id" class="btn btn-sm btn-light me-1">
+                                        <i class="bi bi-pencil"></i> Editar
+                                    </a>
+                                    <button class="btn btn-sm btn-danger" @onclick="() => ShowDeleteConfirm(accion)">
+                                        <i class="bi bi-trash"></i> Eliminar
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-2 mb-2">
+                                        <strong class="d-block text-muted small">Persona que reporta</strong>
+                                        <span>@(accion.Usuario?.Username ?? "-")</span>
+                                    </div>
+                                    <div class="col-md-2 mb-2">
+                                        <strong class="d-block text-muted small">Fecha</strong>
+                                        <span>@accion.Fecha.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <strong class="d-block text-muted small">Tipo de Accion</strong>
+                                        <span>@TipoAccionTexto(accion.TipoAccionId)</span>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <strong class="d-block text-muted small">Organizacion</strong>
+                                        <span>@NombreMaestro(organizaciones, accion.OrganizacionId)</span>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <strong class="d-block text-muted small">Origen</strong>
+                                        <span>@NombreMaestro(origenes, accion.OrigenId)</span>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <strong class="d-block text-muted small">Proceso</strong>
+                                        <span>@(accion.Proceso?.Descripcion ?? "-")</span>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <strong class="d-block text-muted small">Responsable del Proceso</strong>
+                                        <span>@NombreResponsableProceso(accion.ProcesoId)</span>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <strong class="d-block text-muted small">Entidad</strong>
+                                        <span>@NombreMaestro(entidades, accion.EntidadId)</span>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <strong class="d-block text-muted small">Sistema de Gestion</strong>
+                                        <span>@NombreMaestro(sistemasGestion, accion.SistemaGestionId)</span>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <strong class="d-block text-muted small">Sitio</strong>
+                                        <span>@NombreMaestro(sitios, accion.SitioId)</span>
+                                    </div>
+                                    <div class="col-md-12 mt-2">
+                                        <strong class="d-block text-muted small">Descripcion del hallazgo</strong>
+                                        <span>@accion.Descripcion</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Solucion -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-success text-white">
+                                <i class="bi bi-lightbulb me-2"></i>Solucion
+                            </div>
+                            <div class="card-body">
+                                @if (accion.Solucion != null)
+                                {
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p><strong>Correccion Propuesta:</strong> @accion.Solucion.CorreccionPropuesta</p>
+                                            <p><strong>Analisis de Causa:</strong> @accion.Solucion.AnalisisCausa</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p><strong>Investigador:</strong> @(accion.Solucion.UsuarioInvestiga?.Username ?? "-")</p>
+                                            <p><strong>Fecha Investigacion:</strong> @accion.Solucion.FechaInvestigacion.ToString("dd/MM/yyyy")</p>
+                                            <p><strong>Coordinador:</strong> @(accion.Solucion.UsuarioCoordina?.Username ?? "-")</p>
+                                            <p><strong>Fecha Compromiso:</strong> @accion.Solucion.FechaCompromiso.ToString("dd/MM/yyyy")</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Actividades de la Solucion -->
+                                    @if (accion.Solucion.Actividades != null && accion.Solucion.Actividades.Any())
+                                    {
+                                        <hr />
+                                        <h6 class="text-muted mb-2"><i class="bi bi-list-task me-1"></i>Actividades del Plan</h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-bordered">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Descripcion</th>
+                                                        <th>Agencia</th>
+                                                        <th>Responsable</th>
+                                                        <th>Fecha compromiso</th>
+                                                        <th>Estado</th>
+                                                        <th>Ejecucion</th>
+                                                        <th>Evidencia</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var actividad in accion.Solucion.Actividades)
+                                                    {
+                                                        <tr class="@(actividad.Ejecutada ? "table-success" : "")">
+                                                            <td>@actividad.Descripcion</td>
+                                                            <td>@actividad.Agencia</td>
+                                                            <td>@(actividad.Responsable?.Username ?? "-")</td>
+                                                            <td>@actividad.Fecha.ToString("dd/MM/yyyy")</td>
+                                                            <td>
+                                                                <span class="badge @(actividad.Ejecutada ? "bg-success" : "bg-warning text-dark")">
+                                                                    @(actividad.Ejecutada ? "Ejecutada" : "Pendiente")
+                                                                </span>
+                                                            </td>
+                                                            <td>@(actividad.FechaEjecucion?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                                            <td>
+                                                                @if (!string.IsNullOrEmpty(actividad.RutaEvidencia))
+                                                                {
+                                                                    <a href="/@actividad.RutaEvidencia" target="_blank" class="btn btn-sm btn-outline-primary py-0">
+                                                                        <i class="bi bi-file-earmark me-1"></i>@(actividad.NombreArchivoEvidencia ?? "Ver")
+                                                                    </a>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span class="text-muted">-</span>
+                                                                }
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="text-muted fst-italic mb-0">Sin solucion registrada.</p>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Confirmacion Plan de Accion -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-warning text-dark">
+                                <i class="bi bi-clipboard-check me-2"></i>Confirmacion del Plan de Accion
+                            </div>
+                            <div class="card-body">
+                                @if (accion.ConfirmacionPlanAccion != null)
+                                {
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p><strong>Detalles de Cumplimiento:</strong> @accion.ConfirmacionPlanAccion.DetallesCumplimiento</p>
+                                            <p><strong>Fecha:</strong> @accion.ConfirmacionPlanAccion.Fecha.ToString("dd/MM/yyyy")</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p><strong>Responsable:</strong> @(accion.ConfirmacionPlanAccion.Responsable?.Username ?? "-")</p>
+                                            <p>
+                                                <strong>Cumplio el Plan:</strong>
+                                                @if (accion.ConfirmacionPlanAccion.CumplioPlan)
+                                                {
+                                                    <span class="badge bg-success">Si</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger">No</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p class="text-muted fst-italic mb-0">Sin confirmacion registrada.</p>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Eficacia -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-info text-white">
+                                <i class="bi bi-graph-up me-2"></i>Eficacia
+                            </div>
+                            <div class="card-body">
+                                @if (accion.Eficacia != null)
+                                {
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p><strong>Comentarios:</strong> @accion.Eficacia.Comentarios</p>
+                                            <p><strong>Fecha:</strong> @accion.Eficacia.Fecha.ToString("dd/MM/yyyy")</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p>
+                                                <strong>Resultado:</strong>
+                                                @if (accion.Eficacia.Eficaz)
+                                                {
+                                                    <span class="badge bg-success">Eficaz</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger">No Eficaz</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p class="text-muted fst-italic mb-0">Sin evaluacion de eficacia.</p>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Seguimiento SGI -->
+                        @if (accion.SeguimientosSgi != null && accion.SeguimientosSgi.Any())
+                        {
+                        <div class="card mb-3">
+                            <div class="card-header bg-dark text-white">
+                                <i class="bi bi-journal-text me-2"></i>Seguimiento SGI
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="list-group list-group-flush">
+                                    @foreach (var seg in accion.SeguimientosSgi.OrderByDescending(s => s.Fecha))
+                                    {
+                                        <div class="list-group-item">
+                                            <p class="mb-1">@seg.Comentario</p>
+                                            <small class="text-muted">
+                                                <i class="bi bi-person me-1"></i>@(seg.Usuario?.Nombre ?? "-")
+                                                <i class="bi bi-calendar ms-2 me-1"></i>@seg.Fecha.ToString("dd/MM/yyyy HH:mm")
+                                            </small>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        }
+
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@if (showDeleteModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Eliminacion</h5>
+                    <button type="button" class="btn-close" @onclick="CloseDeleteModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Estas seguro de que deseas eliminar esta accion?</p>
+                    @if (actividadToDelete != null)
+                    {
+                        <p><strong>ACC-@actividadToDelete.Id:</strong> @actividadToDelete.Descripcion</p>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseDeleteModal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmDelete">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Accion> acciones = new();
+    private bool isLoading = true;
+    private bool showDeleteModal = false;
+    private Accion? actividadToDelete;
+
+    // Listas para resolver nombres
+    private List<Maestro> origenes = new();
+    private List<Maestro> entidades = new();
+    private List<Maestro> sistemasGestion = new();
+    private List<Maestro> organizaciones = new();
+    private List<Maestro> sitios = new();
+    private List<Proceso> procesos = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var isAuthenticated = await AuthService.IsAuthenticated();
+            if (!isAuthenticated)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            origenes = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.ORIGEN).ToListAsync();
+            entidades = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.ENTIDAD).ToListAsync();
+            sistemasGestion = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.SISGESTION).ToListAsync();
+            organizaciones = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.ORGANIZACION).ToListAsync();
+            sitios = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.SITIO).ToListAsync();
+            procesos = await DbContext.Procesos.Include(p => p.Responsable).ToListAsync();
+
+            await LoadActividades();
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadActividades()
+    {
+        isLoading = true;
+        acciones = await ActividadService.GetAll();
+        isLoading = false;
+    }
+
+    private string NombreMaestro(List<Maestro> lista, int id) =>
+        lista.FirstOrDefault(m => m.Id == id)?.Descripcion ?? "-";
+
+    private string TipoAccionTexto(int tipo) => tipo switch
+    {
+        1 => "Preventiva",
+        2 => "Correctiva",
+        3 => "Mejora",
+        _ => "-"
+    };
+
+    private string NombreResponsableProceso(int procesoId) =>
+        procesos.FirstOrDefault(p => p.Id == procesoId)?.Responsable?.Nombre ?? "-";
+
+    private string BadgeEstado(int estadoId) => estadoId switch
+    {
+        1 => "bg-secondary",          // Abierta sin Plan
+        2 => "bg-primary",            // Abierta con Solución
+        3 => "bg-warning text-dark",  // Abierta por Confirmación
+        4 => "bg-info text-dark",     // Pendiente por Eficacia
+        5 => "bg-success",            // Cerrada
+        _ => "bg-secondary"
+    };
+
+    private void ShowDeleteConfirm(Accion actividad)
+    {
+        actividadToDelete = actividad;
+        showDeleteModal = true;
+    }
+
+    private void CloseDeleteModal()
+    {
+        showDeleteModal = false;
+        actividadToDelete = null;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (actividadToDelete != null)
+        {
+            await ActividadService.Delete(actividadToDelete.Id);
+            await LoadActividades();
+        }
+        CloseDeleteModal();
+    }
+}

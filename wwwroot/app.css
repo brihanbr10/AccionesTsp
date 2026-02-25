@@ -1,0 +1,49 @@
+html, body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    height: 100%;
+}
+
+.page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.5rem;
+}
+
+.card {
+    border: none;
+    border-radius: 8px;
+}
+
+.card-header {
+    border-radius: 8px 8px 0 0 !important;
+}
+
+.table {
+    background-color: white;
+}
+
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.form-control, .form-select {
+    border-radius: 6px;
+}
+
+.alert {
+    border-radius: 6px;
+}
+
+.modal.show {
+    display: block;
+}

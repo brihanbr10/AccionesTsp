@@ -1,0 +1,322 @@
+@page "/register"
+@layout AuthLayout
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject AppDbContext DbContext
+@rendermode InteractiveServer
+
+@using ActividadApp.Data
+@using ActividadApp.Models
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Registrarse</PageTitle>
+
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-left">
+            <div class="auth-illustration">
+                <svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+
+                    <!-- Clipboard base -->
+                    <rect x="120" y="40" width="260" height="420" rx="16" fill="#fff" stroke="#e2e8f0" stroke-width="2"/>
+                    <rect x="190" y="30" width="120" height="30" rx="15" fill="url(#grad2)"/>
+                    <circle cx="250" cy="45" r="6" fill="#fff" opacity="0.6"/>
+
+                    <!-- Header -->
+                    <rect x="145" y="80" width="100" height="8" rx="4" fill="#4a5568"/>
+                    <rect x="145" y="95" width="160" height="6" rx="3" fill="#e2e8f0"/>
+
+                    <!-- Form fields -->
+                    <rect x="145" y="120" width="210" height="32" rx="6" fill="#f7fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+                    <rect x="155" y="133" width="60" height="5" rx="2" fill="#cbd5e0"/>
+
+                    <rect x="145" y="165" width="210" height="32" rx="6" fill="#f7fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+                    <rect x="155" y="178" width="80" height="5" rx="2" fill="#cbd5e0"/>
+
+                    <rect x="145" y="210" width="210" height="32" rx="6" fill="#f7fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+                    <rect x="155" y="223" width="50" height="5" rx="2" fill="#cbd5e0"/>
+
+                    <rect x="145" y="255" width="100" height="32" rx="6" fill="#f7fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+                    <rect x="155" y="268" width="40" height="5" rx="2" fill="#cbd5e0"/>
+                    <rect x="255" y="255" width="100" height="32" rx="6" fill="#f7fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+                    <rect x="265" y="268" width="45" height="5" rx="2" fill="#cbd5e0"/>
+
+                    <!-- Submit button -->
+                    <rect x="145" y="310" width="210" height="36" rx="8" fill="url(#grad2)"/>
+                    <rect x="210" y="324" width="80" height="7" rx="3" fill="#fff" opacity="0.7"/>
+
+                    <!-- Decorative checkmarks -->
+                    <circle cx="160" y="380" r="14" fill="#48bb78" opacity="0.15"/>
+                    <path d="M153 380 L158 385 L167 375" fill="none" stroke="#48bb78" stroke-width="2.5" stroke-linecap="round"/>
+                    <rect x="182" y="376" width="100" height="6" rx="3" fill="#e2e8f0"/>
+
+                    <circle cx="160" cy="415" r="14" fill="#48bb78" opacity="0.15"/>
+                    <path d="M153 415 L158 420 L167 410" fill="none" stroke="#48bb78" stroke-width="2.5" stroke-linecap="round"/>
+                    <rect x="182" y="411" width="80" height="6" rx="3" fill="#e2e8f0"/>
+
+                    <!-- Gear / settings icon -->
+                    <circle cx="420" cy="100" r="30" fill="url(#grad2)" opacity="0.1"/>
+                    <circle cx="420" cy="100" r="16" fill="none" stroke="url(#grad2)" stroke-width="3"/>
+                    <circle cx="420" cy="100" r="6" fill="url(#grad2)"/>
+                    <line x1="420" y1="78" x2="420" y2="84" stroke="url(#grad2)" stroke-width="3" stroke-linecap="round"/>
+                    <line x1="420" y1="116" x2="420" y2="122" stroke="url(#grad2)" stroke-width="3" stroke-linecap="round"/>
+                    <line x1="398" y1="100" x2="404" y2="100" stroke="url(#grad2)" stroke-width="3" stroke-linecap="round"/>
+                    <line x1="436" y1="100" x2="442" y2="100" stroke="url(#grad2)" stroke-width="3" stroke-linecap="round"/>
+
+                    <!-- People dots -->
+                    <circle cx="80" cy="250" r="20" fill="url(#grad2)" opacity="0.15"/>
+                    <circle cx="80" cy="243" r="7" fill="url(#grad2)" opacity="0.4"/>
+                    <ellipse cx="80" cy="260" rx="10" ry="6" fill="url(#grad2)" opacity="0.4"/>
+
+                    <circle cx="60" cy="310" r="16" fill="url(#grad2)" opacity="0.1"/>
+                    <circle cx="60" cy="304" r="5.5" fill="url(#grad2)" opacity="0.3"/>
+                    <ellipse cx="60" cy="317" rx="8" ry="5" fill="url(#grad2)" opacity="0.3"/>
+
+                    <!-- Arrow up -->
+                    <line x1="430" y1="400" x2="430" y2="350" stroke="url(#grad2)" stroke-width="3" stroke-linecap="round"/>
+                    <polyline points="420,365 430,350 440,365" fill="none" stroke="url(#grad2)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+        </div>
+        
+        <div class="auth-right">
+            <h1 class="auth-title">Crear Cuenta</h1>
+            <p class="auth-subtitle">Completa el formulario para registrarte</p>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert-auth alert-danger">
+                    <i class="bi bi-exclamation-circle me-2"></i>@errorMessage
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="alert-auth alert-success">
+                    <i class="bi bi-check-circle me-2"></i>@successMessage
+                </div>
+            }
+
+            <EditForm Model="@registerModel" OnValidSubmit="@HandleRegister">
+                <div class="row">
+                    <div class="col-12 col-md-6">
+                        <div class="auth-form-group">
+                            <label class="auth-label" for="nombre">Nombre completo</label>
+                            <InputText id="nombre" class="auth-input" @bind-Value="registerModel.Nombre" placeholder="Juan Perez" />
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="auth-form-group">
+                            <label class="auth-label" for="cedula">Cedula</label>
+                            <InputNumber id="cedula" class="auth-input" @bind-Value="registerModel.Cedula" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="auth-form-group">
+                    <label class="auth-label" for="email">Correo electronico</label>
+                    <InputText id="email" class="auth-input" @bind-Value="registerModel.Email" placeholder="juan@ejemplo.com" />
+                </div>
+
+                <div class="auth-form-group">
+                    <label class="auth-label" for="organizacion">Organizacion</label>
+                    <InputSelect id="organizacion" class="auth-input" @bind-Value="registerModel.OrganizacionId">
+                        <option value="0">Seleccionar...</option>
+                        @foreach (var item in organizaciones)
+                        {
+                            <option value="@item.Id">@item.Descripcion</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="auth-form-group">
+                    <label class="auth-label" for="cargo">Cargo</label>
+                    <InputSelect id="cargo" class="auth-input" @bind-Value="registerModel.CargoId">
+                        <option value="0">Seleccionar...</option>
+                        @foreach (var item in cargos)
+                        {
+                            <option value="@item.Id">@item.Descripcion</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="auth-form-group">
+                    <label class="auth-label" for="agencia">Agencia</label>
+                    <InputSelect id="agencia" class="auth-input" @bind-Value="registerModel.AgenciaId">
+                        <option value="0">Seleccionar...</option>
+                        @foreach (var item in agencias)
+                        {
+                            <option value="@item.Id">@item.Descripcion</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="row">
+                    <div class="col-12 col-md-6">
+                        <div class="auth-form-group">
+                            <label class="auth-label" for="password">Contrasena</label>
+                            <InputText id="password" type="password" class="auth-input" @bind-Value="registerModel.Password" placeholder="********" />
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="auth-form-group">
+                            <label class="auth-label" for="confirmPassword">Confirmar contrasena</label>
+                            <InputText id="confirmPassword" type="password" class="auth-input" @bind-Value="registerModel.ConfirmPassword" placeholder="********" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="auth-checkbox">
+                    <input type="checkbox" id="terms" @bind="agreeTerms" />
+                    <label for="terms">Acepto los terminos y condiciones</label>
+                </div>
+
+                <button type="submit" class="auth-btn" disabled="@isLoading">
+                    @if (isLoading)
+                    {
+                        <span class="spinner-border spinner-border-sm"></span>
+                        <span>Creando cuenta...</span>
+                    }
+                    else
+                    {
+                        <span>Registrarse</span>
+                    }
+                </button>
+            </EditForm>
+
+            <div class="auth-footer">
+                <span>o</span>
+                <a href="/login" class="auth-link">Iniciar sesion</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private RegisterModel registerModel = new();
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    private bool isLoading = false;
+    private bool agreeTerms = false;
+
+    private List<Maestro> organizaciones = new();
+    private List<Maestro> cargos = new();
+    private List<Maestro> agencias = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            organizaciones = await DbContext.Maestros
+                .Where(m => m.Tipo == TipoMaestro.ORGANIZACION).ToListAsync();
+            cargos = await DbContext.Maestros
+                .Where(m => m.Tipo == TipoMaestro.CARGO).ToListAsync();
+            agencias = await DbContext.Maestros
+                .Where(m => m.Tipo == TipoMaestro.SITIO).ToListAsync();
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleRegister()
+    {
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+        isLoading = true;
+
+        try
+        {
+            if (!agreeTerms)
+            {
+                errorMessage = "Debes aceptar los terminos y condiciones.";
+                isLoading = false;
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(registerModel.Nombre))
+            {
+                errorMessage = "El nombre es requerido.";
+                isLoading = false;
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(registerModel.Email) || !registerModel.Email.Contains("@"))
+            {
+                errorMessage = "El correo electronico no es valido.";
+                isLoading = false;
+                return;
+            }
+
+            var username = registerModel.Email.Split('@')[0];
+
+            if (registerModel.Cedula <= 0)
+            {
+                errorMessage = "La cedula es requerida.";
+                isLoading = false;
+                return;
+            }
+
+            if (registerModel.OrganizacionId == 0 || registerModel.CargoId == 0 || registerModel.AgenciaId == 0)
+            {
+                errorMessage = "Debes seleccionar organizacion, cargo y agencia.";
+                isLoading = false;
+                return;
+            }
+
+            if (registerModel.Password != registerModel.ConfirmPassword)
+            {
+                errorMessage = "Las contrasenas no coinciden.";
+                isLoading = false;
+                return;
+            }
+
+            if (registerModel.Password.Length < 6)
+            {
+                errorMessage = "La contrasena debe tener al menos 6 caracteres.";
+                isLoading = false;
+                return;
+            }
+
+            var result = await AuthService.SignUp(
+                username, registerModel.Email, registerModel.Password,
+                registerModel.Nombre, registerModel.Cedula,
+                registerModel.OrganizacionId, registerModel.CargoId, registerModel.AgenciaId);
+
+            if (result.Success)
+            {
+                successMessage = "Cuenta creada exitosamente. Redirigiendo...";
+                await Task.Delay(1500);
+                Navigation.NavigateTo("/acciones", forceLoad: true);
+            }
+            else
+            {
+                errorMessage = result.Message;
+            }
+        }
+        catch
+        {
+            errorMessage = "Error al registrarse. Por favor, intenta nuevamente.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private class RegisterModel
+    {
+        public string Nombre { get; set; } = string.Empty;
+        public int Cedula { get; set; }
+        public string Email { get; set; } = string.Empty;
+        public int OrganizacionId { get; set; }
+        public int CargoId { get; set; }
+        public int AgenciaId { get; set; }
+        public string Password { get; set; } = string.Empty;
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+}

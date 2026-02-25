@@ -1,0 +1,11 @@
+{
+  "name": "actividad-app",
+  "version": "1.0.0",
+  "description": "Blazor Server application with Supabase",
+  "scripts": {
+    "build": "echo 'This is a .NET project. Use dotnet build instead.'"
+  },
+  "keywords": ["blazor", "dotnet", "supabase"],
+  "author": "",
+  "license": "ISC"
+}
