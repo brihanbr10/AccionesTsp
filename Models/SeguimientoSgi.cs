@@ -15,7 +15,7 @@ public class SeguimientoSgi
     public int UsuarioId { get; set; }
 
     [Required]
-    public DateTime Fecha { get; set; } = DateTime.Now;
+    public DateTime Fecha { get; set; } = DateTime.UtcNow;
 
     [Required]
     public string Comentario { get; set; } = string.Empty;

@@ -22,9 +22,22 @@ public class FileService : IFileService
         var carpeta = Path.Combine(_env.WebRootPath, CarpetaEvidencias, $"accion-{accionId}");
         Directory.CreateDirectory(carpeta);
 
+        // Sanitizar extension para evitar path traversal
         var extension = Path.GetExtension(nombreOriginal);
-        var nombreArchivo = $"act-{actividadId}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+        if (string.IsNullOrEmpty(extension) || extension.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+        {
+            extension = ".bin";
+        }
+        var nombreArchivo = $"act-{actividadId}_{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
         var rutaCompleta = Path.Combine(carpeta, nombreArchivo);
+
+        // Verificar que la ruta final esta dentro de wwwroot
+        var rutaNormalizada = Path.GetFullPath(rutaCompleta);
+        var webRootNormalizado = Path.GetFullPath(_env.WebRootPath);
+        if (!rutaNormalizada.StartsWith(webRootNormalizado, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Ruta de archivo invalida.");
+        }
 
         using var fileStream = new FileStream(rutaCompleta, FileMode.Create);
         await stream.CopyToAsync(fileStream);

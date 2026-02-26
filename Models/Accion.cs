@@ -10,7 +10,7 @@ public class Accion
 
     [Required]
     public int TipoAccionId { get; set; }
-    public DateTime Fecha { get; set; } = DateTime.Now;
+    public DateTime Fecha { get; set; } = DateTime.UtcNow;
 
     [Required] 
     public int ProcesoId { get; set;} 
@@ -42,7 +42,7 @@ public class Accion
     [Required]
     public int EstadoId { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt {  get; set; }
     public DateTime? UltimaNotificacion { get; set; }
 

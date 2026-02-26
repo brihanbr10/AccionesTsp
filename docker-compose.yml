@@ -1,0 +1,25 @@
+services:
+  app:
+    build: .
+    container_name: actividadapp
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
+      - Jwt__Key=${JWT_KEY}
+      - Jwt__Issuer=ActividadApp
+      - Jwt__Audience=ActividadAppUsers
+      - EmailSettings__SmtpServer=${SMTP_SERVER}
+      - EmailSettings__SmtpPort=${SMTP_PORT}
+      - EmailSettings__SenderName=Sistema de Acciones
+      - EmailSettings__SenderEmail=${SMTP_EMAIL}
+      - EmailSettings__Password=${SMTP_PASSWORD}
+      - EmailSettings__UseSsl=true
+    volumes:
+      - evidencias:/app/wwwroot/evidencias
+    restart: unless-stopped
+
+volumes:
+  evidencias:

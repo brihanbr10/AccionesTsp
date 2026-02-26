@@ -1,0 +1,13 @@
+**/.vs
+**/bin
+**/obj
+**/out
+**/logs
+**/.git
+**/.gitignore
+**/node_modules
+**/*.md
+**/docker-compose*.yml
+**/Dockerfile
+**/.dockerignore
+appsettings.Development.json

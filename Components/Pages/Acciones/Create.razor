@@ -282,9 +282,9 @@
     private Solucion solucion = new();
     private List<Actividad> actividades = new();
 
-    private DateTime fecha = DateTime.Now;
-    private DateTime fechaInvestigacion = DateTime.Now;
-    private DateTime fechaCompromiso = DateTime.Now;
+    private DateTime fecha = DateTime.UtcNow;
+    private DateTime fechaInvestigacion = DateTime.UtcNow;
+    private DateTime fechaCompromiso = DateTime.UtcNow;
 
     private bool incluirSolucion = false;
 
@@ -306,13 +306,14 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        userSession = await AuthService.GetCurrentUserSession();
-        if (userSession!=null)
-        {
-            username = userSession?.Username;
-        }
         if (firstRender)
         {
+            userSession = await AuthService.GetCurrentUserSession();
+            if (userSession != null)
+            {
+                username = userSession.Username;
+            }
+
             origenes = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.ORIGEN).ToListAsync();
             entidades = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.ENTIDAD).ToListAsync();
             sistemasGestion = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.SISGESTION).ToListAsync();
@@ -390,6 +391,15 @@
 
             if (incluirSolucion)
             {
+                if (string.IsNullOrWhiteSpace(solucion.AnalisisCausa) ||
+                    string.IsNullOrWhiteSpace(solucion.CorreccionPropuesta) ||
+                    solucion.UsuarioInvestigaId == 0 || solucion.UsuarioCoordinaId == 0)
+                {
+                    errorMessage = "Todos los campos de la solucion son requeridos.";
+                    isLoading = false;
+                    return;
+                }
+
                 solucion.FechaInvestigacion = fechaInvestigacion;
                 solucion.FechaCompromiso = fechaCompromiso;
                 solucion.Actividades = actividades;
@@ -409,7 +419,7 @@
                 // Correo al responsable del proceso
                 if (proceso?.Responsable != null)
                 {
-                    _ = EmailService.EnviarAccionCreada(
+                    await EmailService.EnviarAccionCreada(
                         proceso.Responsable.Email, proceso.Responsable.Nombre,
                         consecutivo, proceso.Descripcion, accion.Descripcion, tipoAccion, accion.Fecha);
                 }
@@ -422,7 +432,7 @@
                         var usuario = usuarios.FirstOrDefault(u => u.Id == act.ResponsableId);
                         if (usuario != null)
                         {
-                            _ = EmailService.EnviarSolucionRegistrada(
+                            await EmailService.EnviarSolucionRegistrada(
                                 usuario.Email, usuario.Nombre,
                                 consecutivo, proceso?.Descripcion ?? "-",
                                 act.Descripcion, act.Agencia, solucion.FechaCompromiso);

@@ -1,0 +1,253 @@
+@page "/maestros/{Tipo}"
+@rendermode InteractiveServer
+
+@inject AppDbContext DbContext
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+@using ActividadApp.Data
+@using ActividadApp.Models
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>@TituloMaestro</PageTitle>
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-gear me-2"></i>@TituloMaestro</h2>
+    </div>
+
+    @if (!esAdmin)
+    {
+        <div class="alert alert-danger">No tiene permisos para acceder a esta seccion.</div>
+    }
+    else
+    {
+        @if (!string.IsNullOrEmpty(mensaje))
+        {
+            <div class="alert @(esError ? "alert-danger" : "alert-success") alert-dismissible fade show">
+                <i class="bi @(esError ? "bi-exclamation-circle" : "bi-check-circle") me-2"></i>@mensaje
+                <button type="button" class="btn-close" @onclick="() => mensaje = string.Empty"></button>
+            </div>
+        }
+
+        <!-- Formulario -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <input type="text" class="form-control" placeholder="Descripcion..." @bind="nuevaDescripcion" />
+                    </div>
+                    <div class="col-md-4">
+                        @if (editandoId.HasValue)
+                        {
+                            <button class="btn btn-warning me-2" @onclick="ActualizarMaestro">
+                                <i class="bi bi-pencil me-1"></i>Actualizar
+                            </button>
+                            <button class="btn btn-secondary" @onclick="CancelarEdicion">Cancelar</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-primary" @onclick="CrearMaestro" disabled="@string.IsNullOrWhiteSpace(nuevaDescripcion)">
+                                <i class="bi bi-plus-circle me-1"></i>Agregar
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla -->
+        @if (isLoading)
+        {
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary"></div>
+            </div>
+        }
+        else if (!maestros.Any())
+        {
+            <div class="alert alert-info">No hay registros.</div>
+        }
+        else
+        {
+            <div class="card shadow-sm">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:80px">ID</th>
+                                <th>Descripcion</th>
+                                <th style="width:150px" class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var m in maestros)
+                            {
+                                <tr>
+                                    <td>@m.Id</td>
+                                    <td>@m.Descripcion</td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-outline-warning me-1" @onclick="() => IniciarEdicion(m)">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarMaestro(m.Id)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string Tipo { get; set; } = string.Empty;
+
+    private List<Maestro> maestros = new();
+    private string nuevaDescripcion = string.Empty;
+    private int? editandoId = null;
+    private bool isLoading = true;
+    private bool esAdmin = false;
+    private string mensaje = string.Empty;
+    private bool esError = false;
+
+    private TipoMaestro TipoMaestroEnum => Tipo?.ToUpper() switch
+    {
+        "ORIGEN" => TipoMaestro.ORIGEN,
+        "SISGESTION" => TipoMaestro.SISGESTION,
+        "ORGANIZACION" => TipoMaestro.ORGANIZACION,
+        "ENTIDAD" => TipoMaestro.ENTIDAD,
+        "CARGO" => TipoMaestro.CARGO,
+        "SITIO" => TipoMaestro.SITIO,
+        _ => TipoMaestro.ORIGEN
+    };
+
+    private string TituloMaestro => Tipo?.ToUpper() switch
+    {
+        "ORIGEN" => "Origenes",
+        "SISGESTION" => "Sistemas de Gestion",
+        "ORGANIZACION" => "Organizaciones",
+        "ENTIDAD" => "Entidades",
+        "CARGO" => "Cargos",
+        "SITIO" => "Sitios",
+        _ => "Maestros"
+    };
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var session = await AuthService.GetCurrentUserSession();
+            if (session == null)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            var user = await DbContext.Users.FirstOrDefaultAsync(u => u.Id == session.UserId);
+            esAdmin = user?.RolId == 2;
+
+            if (esAdmin)
+                await CargarDatos();
+
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (esAdmin)
+        {
+            isLoading = true;
+            editandoId = null;
+            nuevaDescripcion = string.Empty;
+            mensaje = string.Empty;
+            await CargarDatos();
+            isLoading = false;
+        }
+    }
+
+    private async Task CargarDatos()
+    {
+        maestros = await DbContext.Maestros
+            .Where(m => m.Tipo == TipoMaestroEnum)
+            .OrderBy(m => m.Descripcion)
+            .ToListAsync();
+    }
+
+    private async Task CrearMaestro()
+    {
+        if (string.IsNullOrWhiteSpace(nuevaDescripcion)) return;
+
+        var maestro = new Maestro
+        {
+            Descripcion = nuevaDescripcion.Trim(),
+            Tipo = TipoMaestroEnum
+        };
+
+        DbContext.Maestros.Add(maestro);
+        await DbContext.SaveChangesAsync();
+
+        nuevaDescripcion = string.Empty;
+        mensaje = "Registro creado correctamente.";
+        esError = false;
+        await CargarDatos();
+    }
+
+    private void IniciarEdicion(Maestro m)
+    {
+        editandoId = m.Id;
+        nuevaDescripcion = m.Descripcion;
+    }
+
+    private void CancelarEdicion()
+    {
+        editandoId = null;
+        nuevaDescripcion = string.Empty;
+    }
+
+    private async Task ActualizarMaestro()
+    {
+        if (!editandoId.HasValue || string.IsNullOrWhiteSpace(nuevaDescripcion)) return;
+
+        var maestro = await DbContext.Maestros.FindAsync(editandoId.Value);
+        if (maestro != null)
+        {
+            maestro.Descripcion = nuevaDescripcion.Trim();
+            await DbContext.SaveChangesAsync();
+
+            mensaje = "Registro actualizado correctamente.";
+            esError = false;
+        }
+
+        CancelarEdicion();
+        await CargarDatos();
+    }
+
+    private async Task EliminarMaestro(int id)
+    {
+        try
+        {
+            var maestro = await DbContext.Maestros.FindAsync(id);
+            if (maestro != null)
+            {
+                DbContext.Maestros.Remove(maestro);
+                await DbContext.SaveChangesAsync();
+
+                mensaje = "Registro eliminado correctamente.";
+                esError = false;
+                await CargarDatos();
+            }
+        }
+        catch
+        {
+            mensaje = "No se puede eliminar: el registro esta siendo usado por otra entidad.";
+            esError = true;
+        }
+    }
+}

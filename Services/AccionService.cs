@@ -1,16 +1,19 @@
 using ActividadApp.Data;
 using ActividadApp.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ActividadApp.Services;
 
 public class AccionService
 {
     private readonly AppDbContext _context;
+    private readonly ILogger<AccionService> _logger;
 
-    public AccionService(AppDbContext context)
+    public AccionService(AppDbContext context, ILogger<AccionService> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<List<Accion>> GetAll()
@@ -35,8 +38,9 @@ public class AccionService
                 .OrderByDescending(a => a.Id)
                 .ToListAsync();
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Error al obtener las acciones");
             return new List<Accion>();
         }
     }
@@ -62,8 +66,9 @@ public class AccionService
                     .ThenInclude(s => s.Usuario)
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Error al obtener la accion {Id}", id);
             return null;
         }
     }
@@ -89,8 +94,9 @@ public class AccionService
             await _context.SaveChangesAsync();
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Error al crear la accion");
             return false;
         }
     }
@@ -99,12 +105,12 @@ public class AccionService
     {
         try
         {
-            _context.Acciones.Update(actividad);
             await _context.SaveChangesAsync();
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Error al actualizar la accion {Id}", actividad.Id);
             return false;
         }
     }
@@ -121,8 +127,9 @@ public class AccionService
             await _context.SaveChangesAsync();
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Error al eliminar la accion {Id}", id);
             return false;
         }
     }

@@ -21,7 +21,7 @@ namespace ActividadApp.Models
         public string Agencia { get; set; }
 
         [Required]
-        public DateTime Fecha { get; set; } = DateTime.Now;
+        public DateTime Fecha { get; set; } = DateTime.UtcNow;
 
         // Seguimiento
         public bool Ejecutada { get; set; } = false;

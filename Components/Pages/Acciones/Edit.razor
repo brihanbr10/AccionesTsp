@@ -624,11 +624,11 @@
     private List<Actividad> actividades = new();
     private List<SeguimientoSgi> seguimientosSgi = new();
 
-    private DateTime fecha = DateTime.Now;
-    private DateTime fechaInvestigacion = DateTime.Now;
-    private DateTime fechaCompromiso = DateTime.Now;
-    private DateTime fechaConfirmacion = DateTime.Now;
-    private DateTime fechaEficacia = DateTime.Now;
+    private DateTime fecha = DateTime.UtcNow;
+    private DateTime fechaInvestigacion = DateTime.UtcNow;
+    private DateTime fechaCompromiso = DateTime.UtcNow;
+    private DateTime fechaConfirmacion = DateTime.UtcNow;
+    private DateTime fechaEficacia = DateTime.UtcNow;
 
     private bool incluirSolucion = false;
     private bool incluirConfirmacion = false;
@@ -841,12 +841,35 @@
         {
             accion.UpdatedAt = DateTime.UtcNow;
 
+            if (incluirSolucion && !tieneSolucionGuardada)
+            {
+                if (string.IsNullOrWhiteSpace(solucion.AnalisisCausa) ||
+                    string.IsNullOrWhiteSpace(solucion.CorreccionPropuesta) ||
+                    solucion.UsuarioInvestigaId == 0 || solucion.UsuarioCoordinaId == 0)
+                {
+                    errorMessage = "Todos los campos de la solucion son requeridos.";
+                    isLoading = false;
+                    return;
+                }
+            }
+
             if (incluirSolucion)
             {
                 solucion.FechaInvestigacion = fechaInvestigacion;
                 solucion.FechaCompromiso = fechaCompromiso;
                 solucion.Actividades = actividades;
                 accion.Solucion = solucion;
+            }
+
+            if (incluirSolucion && incluirConfirmacion && !tieneConfirmacionGuardada)
+            {
+                if (string.IsNullOrWhiteSpace(confirmacion.DetallesCumplimiento) ||
+                    confirmacion.ResponsableId == 0)
+                {
+                    errorMessage = "Todos los campos de la confirmacion son requeridos.";
+                    isLoading = false;
+                    return;
+                }
             }
 
             if (incluirSolucion && incluirConfirmacion)
@@ -857,6 +880,14 @@
 
             if (tieneConfirmacionGuardada && incluirEficacia)
             {
+                if (string.IsNullOrWhiteSpace(eficacia.Comentarios) ||
+                    eficacia.ResponsableId == 0)
+                {
+                    errorMessage = "Todos los campos de eficacia son requeridos.";
+                    isLoading = false;
+                    return;
+                }
+
                 eficacia.Fecha = fechaEficacia;
                 accion.Eficacia = eficacia;
             }
@@ -879,7 +910,7 @@
                         var usuario = usuarios.FirstOrDefault(u => u.Id == act.ResponsableId);
                         if (usuario != null)
                         {
-                            _ = EmailService.EnviarSolucionRegistrada(
+                            await EmailService.EnviarSolucionRegistrada(
                                 usuario.Email, usuario.Nombre,
                                 consecutivo, proceso?.Descripcion ?? "-",
                                 act.Descripcion, act.Agencia, solucion.FechaCompromiso);
@@ -893,7 +924,7 @@
                     var investigador = usuarios.FirstOrDefault(u => u.Id == solucion.UsuarioInvestigaId);
                     if (investigador != null)
                     {
-                        _ = EmailService.EnviarConfirmacionPendiente(
+                        await EmailService.EnviarConfirmacionPendiente(
                             investigador.Email, investigador.Nombre,
                             consecutivo, proceso?.Descripcion ?? "-", accion.Descripcion);
                     }
@@ -905,7 +936,7 @@
                     var admins = usuarios.Where(u => u.RolId == 2).ToList();
                     foreach (var admin in admins)
                     {
-                        _ = EmailService.EnviarEficaciaPendiente(
+                        await EmailService.EnviarEficaciaPendiente(
                             admin.Email, admin.Nombre,
                             consecutivo, proceso?.Descripcion ?? "-", accion.Descripcion);
                     }
@@ -914,7 +945,7 @@
                 // Eficacia registrada: correo al responsable del proceso
                 if (nuevoEstado == 5 && estadoAnterior < 5 && proceso?.Responsable != null)
                 {
-                    _ = EmailService.EnviarAccionCerrada(
+                    await EmailService.EnviarAccionCerrada(
                         proceso.Responsable.Email, proceso.Responsable.Nombre,
                         consecutivo, proceso.Descripcion, accion.Descripcion, eficacia.Eficaz);
                 }

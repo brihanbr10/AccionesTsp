@@ -50,6 +50,8 @@ public class NotificacionBackgroundService : BackgroundService
                     .ThenInclude(act => act.Responsable)
             .Include(a => a.Solucion)
                 .ThenInclude(s => s.UsuarioInvestiga)
+            .Include(a => a.ConfirmacionPlanAccion)
+            .Include(a => a.Eficacia)
             .Include(a => a.Estado)
             .Where(a => a.EstadoId >= 1 && a.EstadoId <= 4)
             .ToListAsync(ct);
@@ -95,11 +97,12 @@ public class NotificacionBackgroundService : BackgroundService
                         foreach (var act in pendientes)
                         {
                             var diasActividad = (int)(ahora - accion.Solucion.FechaCompromiso).TotalDays;
-                            enviado = await emailService.EnviarRecordatorio(
+                            var envioActividad = await emailService.EnviarRecordatorio(
                                 act.Responsable.Email,
                                 act.Responsable.Nombre,
                                 consecutivo, proceso, act.Descripcion,
                                 estado, Math.Abs(diasActividad));
+                            if (envioActividad) enviado = true;
                         }
                     }
                     break;
@@ -214,13 +217,14 @@ public class NotificacionBackgroundService : BackgroundService
     }
 
     // Estado 4: Pendiente por Eficacia
-    // Primer recordatorio a los 90 días, luego cada 15 días
+    // Primer recordatorio según DiasParaVerificar de la confirmación, luego cada 15 días
     private static int? EvaluarEstado4(Accion accion, DateTime ahora)
     {
         var fechaReferencia = accion.UpdatedAt != default ? accion.UpdatedAt : accion.CreatedAt;
         var diasDesdeConfirmacion = (int)(ahora - fechaReferencia).TotalDays;
 
-        if (diasDesdeConfirmacion < 90) return null;
+        var diasParaVerificar = accion.Eficacia?.DiasParaVerificar ?? 90;
+        if (diasDesdeConfirmacion < diasParaVerificar) return null;
 
         if (accion.UltimaNotificacion == null)
             return diasDesdeConfirmacion;

@@ -1,0 +1,217 @@
+@page "/maestros/responsables"
+@rendermode InteractiveServer
+
+@inject AppDbContext DbContext
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+@using ActividadApp.Data
+@using ActividadApp.Models
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Responsables de Proceso</PageTitle>
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-people me-2"></i>Responsables de Proceso</h2>
+    </div>
+
+    @if (!esAdmin)
+    {
+        <div class="alert alert-danger">No tiene permisos para acceder a esta seccion.</div>
+    }
+    else
+    {
+        @if (!string.IsNullOrEmpty(mensaje))
+        {
+            <div class="alert @(esError ? "alert-danger" : "alert-success") alert-dismissible fade show">
+                <i class="bi @(esError ? "bi-exclamation-circle" : "bi-check-circle") me-2"></i>@mensaje
+                <button type="button" class="btn-close" @onclick="() => mensaje = string.Empty"></button>
+            </div>
+        }
+
+        <!-- Formulario -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" class="form-control" placeholder="Nombre completo..." @bind="nuevoNombre" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" placeholder="correo@empresa.com" @bind="nuevoEmail" />
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        @if (editandoId.HasValue)
+                        {
+                            <button class="btn btn-warning me-2" @onclick="Actualizar">
+                                <i class="bi bi-pencil me-1"></i>Actualizar
+                            </button>
+                            <button class="btn btn-secondary" @onclick="CancelarEdicion">Cancelar</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-primary" @onclick="Crear"
+                                    disabled="@(string.IsNullOrWhiteSpace(nuevoNombre) || string.IsNullOrWhiteSpace(nuevoEmail))">
+                                <i class="bi bi-plus-circle me-1"></i>Agregar
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla -->
+        @if (isLoading)
+        {
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary"></div>
+            </div>
+        }
+        else if (!responsables.Any())
+        {
+            <div class="alert alert-info">No hay responsables registrados.</div>
+        }
+        else
+        {
+            <div class="card shadow-sm">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:80px">ID</th>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th style="width:150px" class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in responsables)
+                            {
+                                <tr>
+                                    <td>@r.Id</td>
+                                    <td>@r.Nombre</td>
+                                    <td>@r.Email</td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-outline-warning me-1" @onclick="() => IniciarEdicion(r)">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => Eliminar(r.Id)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private List<ResponsableProceso> responsables = new();
+    private string nuevoNombre = string.Empty;
+    private string nuevoEmail = string.Empty;
+    private int? editandoId = null;
+    private bool isLoading = true;
+    private bool esAdmin = false;
+    private string mensaje = string.Empty;
+    private bool esError = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var session = await AuthService.GetCurrentUserSession();
+            if (session == null) { Navigation.NavigateTo("/login"); return; }
+
+            var user = await DbContext.Users.FirstOrDefaultAsync(u => u.Id == session.UserId);
+            esAdmin = user?.RolId == 2;
+
+            if (esAdmin)
+                await CargarDatos();
+
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CargarDatos()
+    {
+        responsables = await DbContext.ResponsablesProceso.OrderBy(r => r.Nombre).ToListAsync();
+    }
+
+    private async Task Crear()
+    {
+        if (string.IsNullOrWhiteSpace(nuevoNombre) || string.IsNullOrWhiteSpace(nuevoEmail)) return;
+
+        DbContext.ResponsablesProceso.Add(new ResponsableProceso
+        {
+            Nombre = nuevoNombre.Trim(),
+            Email = nuevoEmail.Trim()
+        });
+        await DbContext.SaveChangesAsync();
+
+        nuevoNombre = string.Empty;
+        nuevoEmail = string.Empty;
+        mensaje = "Responsable creado correctamente.";
+        esError = false;
+        await CargarDatos();
+    }
+
+    private void IniciarEdicion(ResponsableProceso r)
+    {
+        editandoId = r.Id;
+        nuevoNombre = r.Nombre;
+        nuevoEmail = r.Email;
+    }
+
+    private void CancelarEdicion()
+    {
+        editandoId = null;
+        nuevoNombre = string.Empty;
+        nuevoEmail = string.Empty;
+    }
+
+    private async Task Actualizar()
+    {
+        if (!editandoId.HasValue) return;
+
+        var responsable = await DbContext.ResponsablesProceso.FindAsync(editandoId.Value);
+        if (responsable != null)
+        {
+            responsable.Nombre = nuevoNombre.Trim();
+            responsable.Email = nuevoEmail.Trim();
+            await DbContext.SaveChangesAsync();
+            mensaje = "Responsable actualizado correctamente.";
+            esError = false;
+        }
+
+        CancelarEdicion();
+        await CargarDatos();
+    }
+
+    private async Task Eliminar(int id)
+    {
+        try
+        {
+            var responsable = await DbContext.ResponsablesProceso.FindAsync(id);
+            if (responsable != null)
+            {
+                DbContext.ResponsablesProceso.Remove(responsable);
+                await DbContext.SaveChangesAsync();
+                mensaje = "Responsable eliminado correctamente.";
+                esError = false;
+                await CargarDatos();
+            }
+        }
+        catch
+        {
+            mensaje = "No se puede eliminar: el responsable esta asignado a un proceso.";
+            esError = true;
+        }
+    }
+}
