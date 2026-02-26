@@ -9,9 +9,7 @@
 *.user
 *.userosscache
 
-# Secrets
-appsettings.json
-appsettings.Development.json
+
 .env
 *.sln.docstates
 
