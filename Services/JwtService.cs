@@ -8,16 +8,23 @@ namespace ActividadApp.Services;
 
 public class JwtService
 {
-    private readonly IConfiguration _configuration;
+    private readonly string _key;
+    private readonly string _issuer;
+    private readonly string _audience;
 
     public JwtService(IConfiguration configuration)
     {
-        _configuration = configuration;
+        _key = Environment.GetEnvironmentVariable("JWT_KEY")
+            ?? configuration["Jwt:Key"]!;
+        _issuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
+            ?? configuration["Jwt:Issuer"]!;
+        _audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
+            ?? configuration["Jwt:Audience"]!;
     }
 
     public string GenerateToken(Usuario user)
     {
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_key));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
@@ -30,8 +37,8 @@ public class JwtService
         };
 
         var token = new JwtSecurityToken(
-            issuer: _configuration["Jwt:Issuer"],
-            audience: _configuration["Jwt:Audience"],
+            issuer: _issuer,
+            audience: _audience,
             claims: claims,
             expires: DateTime.UtcNow.AddHours(8),
             signingCredentials: credentials
@@ -45,16 +52,16 @@ public class JwtService
         try
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!);
+            var key = Encoding.UTF8.GetBytes(_key);
 
             var validationParameters = new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(key),
                 ValidateIssuer = true,
-                ValidIssuer = _configuration["Jwt:Issuer"],
+                ValidIssuer = _issuer,
                 ValidateAudience = true,
-                ValidAudience = _configuration["Jwt:Audience"],
+                ValidAudience = _audience,
                 ValidateLifetime = true,
                 ClockSkew = TimeSpan.Zero
             };

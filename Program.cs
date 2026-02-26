@@ -10,20 +10,28 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using dotenv.net;
+
+// Cargar .env si existe (local y Docker)
+DotEnv.Load(options: new DotEnvOptions(ignoreExceptions: true));
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 0))));
 
 // JWT Configuration
-var jwtKey = builder.Configuration["Jwt:Key"]!;
-var jwtIssuer = builder.Configuration["Jwt:Issuer"]!;
-var jwtAudience = builder.Configuration["Jwt:Audience"]!;
+var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY")
+    ?? builder.Configuration["Jwt:Key"]!;
+var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
+    ?? builder.Configuration["Jwt:Issuer"]!;
+var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
+    ?? builder.Configuration["Jwt:Audience"]!;
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -45,8 +53,17 @@ builder.Services.AddAuthorization();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, BlazorAuthorizationMiddlewareResultHandler>();
 
-// Services
-builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+// Services - Email con override de .env
+var emailSection = builder.Configuration.GetSection("EmailSettings");
+builder.Services.Configure<EmailSettings>(settings =>
+{
+    settings.SmtpServer = Environment.GetEnvironmentVariable("SMTP_SERVER") ?? emailSection["SmtpServer"]!;
+    settings.SmtpPort = int.Parse(Environment.GetEnvironmentVariable("SMTP_PORT") ?? emailSection["SmtpPort"]!);
+    settings.SenderName = emailSection["SenderName"]!;
+    settings.SenderEmail = Environment.GetEnvironmentVariable("SMTP_EMAIL") ?? emailSection["SenderEmail"]!;
+    settings.Password = Environment.GetEnvironmentVariable("SMTP_PASSWORD") ?? emailSection["Password"]!;
+    settings.UseSsl = bool.Parse(emailSection["UseSsl"] ?? "true");
+});
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<JwtService>();
