@@ -304,6 +304,17 @@
     private List<Proceso> procesos = new();
     private List<Usuario> usuarios = new();
 
+    protected override async Task OnInitializedAsync()
+    {
+        origenes = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.ORIGEN).ToListAsync();
+        entidades = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.ENTIDAD).ToListAsync();
+        sistemasGestion = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.SISGESTION).ToListAsync();
+        organizaciones = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.ORGANIZACION).ToListAsync();
+        sitios = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.SITIO).ToListAsync();
+        procesos = await DbContext.Procesos.Include(p => p.Responsable).ToListAsync();
+        usuarios = await DbContext.Users.ToListAsync();
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -313,14 +324,6 @@
             {
                 username = userSession.Username;
             }
-
-            origenes = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.ORIGEN).ToListAsync();
-            entidades = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.ENTIDAD).ToListAsync();
-            sistemasGestion = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.SISGESTION).ToListAsync();
-            organizaciones = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.ORGANIZACION).ToListAsync();
-            sitios = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.SITIO).ToListAsync();
-            procesos = await DbContext.Procesos.Include(p => p.Responsable).ToListAsync();
-            usuarios = await DbContext.Users.ToListAsync();
             StateHasChanged();
         }
     }
