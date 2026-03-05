@@ -146,6 +146,13 @@
 
         try
         {
+            if (string.IsNullOrWhiteSpace(loginModel.Email) || string.IsNullOrWhiteSpace(loginModel.Password))
+            {
+                errorMessage = "El correo y la contrasena son requeridos.";
+                isLoading = false;
+                return;
+            }
+
             var result = await AuthService.SignIn(loginModel.Email, loginModel.Password);
 
             if (result.Success)

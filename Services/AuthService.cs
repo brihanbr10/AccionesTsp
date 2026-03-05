@@ -50,21 +50,14 @@ public class AuthService
                 AgenciaId = agenciaId,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
                 RolId = 1,
+                Activo = false,
                 CreatedAt = DateTime.UtcNow
             };
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            // Recargar el usuario con la relación Rol
-            user = await _context.Users
-                .Include(u => u.Rol)
-                .FirstAsync(u => u.Id == user.Id);
-
-            var token = _jwtService.GenerateToken(user);
-            await _authStateProvider.MarkUserAsAuthenticated(token);
-
-            return (true, token, "Usuario registrado exitosamente");
+            return (true, string.Empty, "Cuenta creada. Un administrador debe activarla antes de poder iniciar sesion.");
         }
         catch (Exception ex)
         {
@@ -83,6 +76,11 @@ public class AuthService
             if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
             {
                 return (false, string.Empty, "Email o contraseña incorrectos");
+            }
+
+            if (!user.Activo)
+            {
+                return (false, string.Empty, "Tu cuenta aun no ha sido activada por un administrador.");
             }
 
             var token = _jwtService.GenerateToken(user);

@@ -10,11 +10,27 @@ public static class DbInitializer
     {
         await context.Database.MigrateAsync();
 
+        // Activar usuarios existentes que no tienen el campo Activo
+        await ActivarUsuariosExistentes(context);
+
         await SeedRoles(context);
         await SeedMaestros(context);
         await SeedResponsablesProceso(context);
         await SeedProcesos(context);
         await SeedEstados(context);
+    }
+
+    private static async Task ActivarUsuariosExistentes(AppDbContext context)
+    {
+        var inactivos = await context.Users.Where(u => !u.Activo).ToListAsync();
+        if (inactivos.Any() && !await context.Users.AnyAsync(u => u.Activo))
+        {
+            foreach (var user in inactivos)
+            {
+                user.Activo = true;
+            }
+            await context.SaveChangesAsync();
+        }
     }
 
     private static async Task SeedRoles(AppDbContext context)

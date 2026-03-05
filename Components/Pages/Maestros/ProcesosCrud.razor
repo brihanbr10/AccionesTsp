@@ -160,7 +160,12 @@
 
     private async Task Crear()
     {
-        if (string.IsNullOrWhiteSpace(nuevaDescripcion) || nuevoResponsableId == 0) return;
+        if (string.IsNullOrWhiteSpace(nuevaDescripcion) || nuevoResponsableId == 0)
+        {
+            mensaje = "La descripcion y el responsable son requeridos.";
+            esError = true;
+            return;
+        }
 
         DbContext.Procesos.Add(new Proceso
         {
@@ -193,6 +198,13 @@
     private async Task Actualizar()
     {
         if (!editandoId.HasValue) return;
+
+        if (string.IsNullOrWhiteSpace(nuevaDescripcion) || nuevoResponsableId == 0)
+        {
+            mensaje = "La descripcion y el responsable son requeridos.";
+            esError = true;
+            return;
+        }
 
         var proceso = await DbContext.Procesos.FindAsync(editandoId.Value);
         if (proceso != null)

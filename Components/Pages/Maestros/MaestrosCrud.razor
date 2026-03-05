@@ -182,7 +182,12 @@
 
     private async Task CrearMaestro()
     {
-        if (string.IsNullOrWhiteSpace(nuevaDescripcion)) return;
+        if (string.IsNullOrWhiteSpace(nuevaDescripcion))
+        {
+            mensaje = "La descripcion es requerida.";
+            esError = true;
+            return;
+        }
 
         var maestro = new Maestro
         {
@@ -213,7 +218,14 @@
 
     private async Task ActualizarMaestro()
     {
-        if (!editandoId.HasValue || string.IsNullOrWhiteSpace(nuevaDescripcion)) return;
+        if (!editandoId.HasValue) return;
+
+        if (string.IsNullOrWhiteSpace(nuevaDescripcion))
+        {
+            mensaje = "La descripcion es requerida.";
+            esError = true;
+            return;
+        }
 
         var maestro = await DbContext.Maestros.FindAsync(editandoId.Value);
         if (maestro != null)

@@ -1,0 +1,247 @@
+@page "/maestros/usuarios"
+@rendermode InteractiveServer
+
+@inject AppDbContext DbContext
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+@using ActividadApp.Data
+@using ActividadApp.Models
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Gestion de Usuarios</PageTitle>
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-people-fill me-2"></i>Gestion de Usuarios</h2>
+    </div>
+
+    @if (!esAdmin)
+    {
+        <div class="alert alert-danger">No tiene permisos para acceder a esta seccion.</div>
+    }
+    else
+    {
+        @if (!string.IsNullOrEmpty(mensaje))
+        {
+            <div class="alert @(esError ? "alert-danger" : "alert-success") alert-dismissible fade show">
+                <i class="bi @(esError ? "bi-exclamation-circle" : "bi-check-circle") me-2"></i>@mensaje
+                <button type="button" class="btn-close" @onclick="() => mensaje = string.Empty"></button>
+            </div>
+        }
+
+        <!-- Usuarios pendientes de activacion -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-warning text-dark">
+                <i class="bi bi-clock-history me-2"></i>Usuarios Pendientes de Activacion
+                @if (usuariosPendientes.Any())
+                {
+                    <span class="badge bg-danger ms-2">@usuariosPendientes.Count</span>
+                }
+            </div>
+            @if (isLoading)
+            {
+                <div class="card-body text-center py-4">
+                    <div class="spinner-border text-primary"></div>
+                </div>
+            }
+            else if (!usuariosPendientes.Any())
+            {
+                <div class="card-body">
+                    <p class="text-muted fst-italic mb-0">No hay usuarios pendientes de activacion.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Cedula</th>
+                                <th>Organizacion</th>
+                                <th>Cargo</th>
+                                <th>Registro</th>
+                                <th>Rol</th>
+                                <th class="text-center" style="width:120px">Accion</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var u in usuariosPendientes)
+                            {
+                                <tr>
+                                    <td>@u.Nombre</td>
+                                    <td>@u.Email</td>
+                                    <td>@u.Cedula</td>
+                                    <td>@(u.Organizacion?.Descripcion ?? "-")</td>
+                                    <td>@(u.Cargo?.Descripcion ?? "-")</td>
+                                    <td>@u.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        <select class="form-select form-select-sm" value="@u.RolId"
+                                                @onchange="(e) => CambiarRolPendiente(u.Id, e)">
+                                            @foreach (var r in roles)
+                                            {
+                                                <option value="@r.Id">@r.Descripcion</option>
+                                            }
+                                        </select>
+                                    </td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-success" @onclick="() => ActivarUsuario(u.Id)">
+                                            <i class="bi bi-check-circle me-1"></i>Activar
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+        <!-- Usuarios activos -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <i class="bi bi-people me-2"></i>Usuarios Activos
+            </div>
+            @if (!usuariosActivos.Any() && !isLoading)
+            {
+                <div class="card-body">
+                    <p class="text-muted fst-italic mb-0">No hay usuarios activos.</p>
+                </div>
+            }
+            else if (!isLoading)
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Organizacion</th>
+                                <th>Rol</th>
+                                <th class="text-center" style="width:120px">Accion</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var u in usuariosActivos)
+                            {
+                                <tr>
+                                    <td>@u.Nombre</td>
+                                    <td>@u.Email</td>
+                                    <td>@(u.Organizacion?.Descripcion ?? "-")</td>
+                                    <td>
+                                        <span class="badge @(u.RolId == 2 ? "bg-warning text-dark" : "bg-secondary")">
+                                            @(u.Rol?.Descripcion ?? "-")
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => DesactivarUsuario(u.Id)"
+                                                disabled="@(u.Id == currentUserId)">
+                                            <i class="bi bi-x-circle me-1"></i>Desactivar
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<Usuario> usuariosPendientes = new();
+    private List<Usuario> usuariosActivos = new();
+    private List<Rol> roles = new();
+    private Dictionary<int, int> rolesSeleccionados = new();
+
+    private bool isLoading = true;
+    private bool esAdmin = false;
+    private int currentUserId = 0;
+    private string mensaje = string.Empty;
+    private bool esError = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var session = await AuthService.GetCurrentUserSession();
+            if (session == null) { Navigation.NavigateTo("/login"); return; }
+
+            currentUserId = session.UserId;
+            var user = await DbContext.Users.FirstOrDefaultAsync(u => u.Id == session.UserId);
+            esAdmin = user?.RolId == 2;
+
+            if (esAdmin)
+            {
+                roles = await DbContext.Roles.ToListAsync();
+                await CargarDatos();
+            }
+
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CargarDatos()
+    {
+        usuariosPendientes = await DbContext.Users
+            .Include(u => u.Rol)
+            .Include(u => u.Organizacion)
+            .Include(u => u.Cargo)
+            .Where(u => !u.Activo)
+            .OrderByDescending(u => u.CreatedAt)
+            .ToListAsync();
+
+        usuariosActivos = await DbContext.Users
+            .Include(u => u.Rol)
+            .Include(u => u.Organizacion)
+            .Where(u => u.Activo)
+            .OrderBy(u => u.Nombre)
+            .ToListAsync();
+
+        rolesSeleccionados = usuariosPendientes.ToDictionary(u => u.Id, u => u.RolId);
+    }
+
+    private void CambiarRolPendiente(int userId, ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var rolId))
+        {
+            rolesSeleccionados[userId] = rolId;
+            var user = usuariosPendientes.FirstOrDefault(u => u.Id == userId);
+            if (user != null) user.RolId = rolId;
+        }
+    }
+
+    private async Task ActivarUsuario(int userId)
+    {
+        var user = await DbContext.Users.FindAsync(userId);
+        if (user == null) return;
+
+        var rolId = rolesSeleccionados.GetValueOrDefault(userId, user.RolId);
+        user.RolId = rolId;
+        user.Activo = true;
+        await DbContext.SaveChangesAsync();
+
+        mensaje = $"Usuario {user.Nombre} activado correctamente.";
+        esError = false;
+        await CargarDatos();
+    }
+
+    private async Task DesactivarUsuario(int userId)
+    {
+        if (userId == currentUserId) return;
+
+        var user = await DbContext.Users.FindAsync(userId);
+        if (user == null) return;
+
+        user.Activo = false;
+        await DbContext.SaveChangesAsync();
+
+        mensaje = $"Usuario {user.Nombre} desactivado.";
+        esError = false;
+        await CargarDatos();
+    }
+}

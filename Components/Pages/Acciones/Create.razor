@@ -5,7 +5,7 @@
 @inject NavigationManager Navigation
 @inject AppDbContext DbContext
 @inject IEmailService EmailService
-@rendermode InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 @using ActividadApp.Data
 @using ActividadApp.Models
@@ -304,17 +304,6 @@
     private List<Proceso> procesos = new();
     private List<Usuario> usuarios = new();
 
-    protected override async Task OnInitializedAsync()
-    {
-        origenes = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.ORIGEN).ToListAsync();
-        entidades = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.ENTIDAD).ToListAsync();
-        sistemasGestion = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.SISGESTION).ToListAsync();
-        organizaciones = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.ORGANIZACION).ToListAsync();
-        sitios = await DbContext.Maestros.Where(m => m.Tipo == TipoMaestro.SITIO).ToListAsync();
-        procesos = await DbContext.Procesos.Include(p => p.Responsable).ToListAsync();
-        usuarios = await DbContext.Users.ToListAsync();
-    }
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -324,6 +313,14 @@
             {
                 username = userSession.Username;
             }
+
+            origenes = await DbContext.Maestros.AsNoTracking().Where(m => m.Tipo == TipoMaestro.ORIGEN).ToListAsync();
+            entidades = await DbContext.Maestros.AsNoTracking().Where(m => m.Tipo == TipoMaestro.ENTIDAD).ToListAsync();
+            sistemasGestion = await DbContext.Maestros.AsNoTracking().Where(m => m.Tipo == TipoMaestro.SISGESTION).ToListAsync();
+            organizaciones = await DbContext.Maestros.AsNoTracking().Where(m => m.Tipo == TipoMaestro.ORGANIZACION).ToListAsync();
+            sitios = await DbContext.Maestros.AsNoTracking().Where(m => m.Tipo == TipoMaestro.SITIO).ToListAsync();
+            procesos = await DbContext.Procesos.AsNoTracking().Include(p => p.Responsable).ToListAsync();
+            usuarios = await DbContext.Users.AsNoTracking().ToListAsync();
             StateHasChanged();
         }
     }
@@ -399,6 +396,13 @@
                     solucion.UsuarioInvestigaId == 0 || solucion.UsuarioCoordinaId == 0)
                 {
                     errorMessage = "Todos los campos de la solucion son requeridos.";
+                    isLoading = false;
+                    return;
+                }
+
+                if (actividades.Any(a => string.IsNullOrWhiteSpace(a.Descripcion) || a.ResponsableId == 0))
+                {
+                    errorMessage = "Cada actividad debe tener descripcion y responsable.";
                     isLoading = false;
                     return;
                 }

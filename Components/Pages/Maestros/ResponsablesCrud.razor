@@ -146,7 +146,19 @@
 
     private async Task Crear()
     {
-        if (string.IsNullOrWhiteSpace(nuevoNombre) || string.IsNullOrWhiteSpace(nuevoEmail)) return;
+        if (string.IsNullOrWhiteSpace(nuevoNombre) || string.IsNullOrWhiteSpace(nuevoEmail))
+        {
+            mensaje = "El nombre y el email son requeridos.";
+            esError = true;
+            return;
+        }
+
+        if (!nuevoEmail.Contains("@"))
+        {
+            mensaje = "El email no es valido.";
+            esError = true;
+            return;
+        }
 
         DbContext.ResponsablesProceso.Add(new ResponsableProceso
         {
@@ -179,6 +191,20 @@
     private async Task Actualizar()
     {
         if (!editandoId.HasValue) return;
+
+        if (string.IsNullOrWhiteSpace(nuevoNombre) || string.IsNullOrWhiteSpace(nuevoEmail))
+        {
+            mensaje = "El nombre y el email son requeridos.";
+            esError = true;
+            return;
+        }
+
+        if (!nuevoEmail.Contains("@"))
+        {
+            mensaje = "El email no es valido.";
+            esError = true;
+            return;
+        }
 
         var responsable = await DbContext.ResponsablesProceso.FindAsync(editandoId.Value);
         if (responsable != null)

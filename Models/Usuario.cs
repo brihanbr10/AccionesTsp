@@ -37,7 +37,9 @@ public class Usuario
     [Required]
     public int RolId { get; set; }
 
-    
+    public bool Activo { get; set; } = false;
+
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Relaciones
