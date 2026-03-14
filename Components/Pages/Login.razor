@@ -164,9 +164,14 @@
                 errorMessage = result.Message;
             }
         }
+        catch (Exception ex) when (ex.GetType().Name == "NavigationException")
+        {
+            // Permite la redireccion de Blazor
+            throw;
+        }
         catch
         {
-            errorMessage = "Error al iniciar sesion. Por favor, intenta nuevamente.";
+            errorMessage = "Error al iniciar sesion. Por favor, intenta de nuevo.";
         }
         finally
         {
