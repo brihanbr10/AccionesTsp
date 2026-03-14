@@ -15,34 +15,39 @@ public class EmailService : IEmailService
         _logger = logger;
     }
 
-    private async Task<bool> EnviarCorreo(string destinatarioEmail, string asunto, string cuerpoHtml)
+    private Task<bool> EnviarCorreo(string destinatarioEmail, string asunto, string cuerpoHtml)
     {
-        try
+        // Fire-and-forget para no bloquear la interfaz de usuario si el servidor SMTP no responde
+        _ = Task.Run(async () =>
         {
-            using var client = new SmtpClient(_settings.SmtpServer, _settings.SmtpPort)
+            try
             {
-                Credentials = new NetworkCredential(_settings.SenderEmail, _settings.Password),
-                EnableSsl = _settings.UseSsl
-            };
+                using var client = new SmtpClient(_settings.SmtpServer, _settings.SmtpPort)
+                {
+                    Credentials = new NetworkCredential(_settings.SenderEmail, _settings.Password),
+                    EnableSsl = _settings.UseSsl,
+                    Timeout = 10000 // 10 segundos
+                };
 
-            var message = new MailMessage
+                var message = new MailMessage
+                {
+                    From = new MailAddress(_settings.SenderEmail, _settings.SenderName),
+                    Subject = asunto,
+                    Body = cuerpoHtml,
+                    IsBodyHtml = true
+                };
+                message.To.Add(new MailAddress(destinatarioEmail));
+
+                await client.SendMailAsync(message);
+                _logger.LogInformation("Correo enviado a {Email}: {Asunto}", destinatarioEmail, asunto);
+            }
+            catch (Exception ex)
             {
-                From = new MailAddress(_settings.SenderEmail, _settings.SenderName),
-                Subject = asunto,
-                Body = cuerpoHtml,
-                IsBodyHtml = true
-            };
-            message.To.Add(new MailAddress(destinatarioEmail));
+                _logger.LogError(ex, "Error al enviar correo a {Email}: {Asunto}", destinatarioEmail, asunto);
+            }
+        });
 
-            await client.SendMailAsync(message);
-            _logger.LogInformation("Correo enviado a {Email}: {Asunto}", destinatarioEmail, asunto);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error al enviar correo a {Email}: {Asunto}", destinatarioEmail, asunto);
-            return false;
-        }
+        return Task.FromResult(true);
     }
 
     public async Task<bool> EnviarAccionCreada(string destinatarioEmail, string destinatarioNombre,
