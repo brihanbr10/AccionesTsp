@@ -303,9 +303,14 @@
                 errorMessage = result.Message;
             }
         }
+        catch (Exception ex) when (ex.GetType().Name == "NavigationException")
+        {
+            // Permite la redireccion de Blazor
+            throw;
+        }
         catch
         {
-            errorMessage = "Error al registrarse. Por favor, intenta nuevamente.";
+            errorMessage = "Error al registrarse. Por favor, intenta de nuevo.";
         }
         finally
         {

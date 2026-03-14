@@ -1046,9 +1046,14 @@
                 errorMessage = "Error al actualizar la accion. Por favor, intenta nuevamente.";
             }
         }
-        catch
+        catch (Exception ex) when (ex.GetType().Name == "NavigationException")
         {
-            errorMessage = "Error inesperado. Por favor, intenta nuevamente.";
+            // Permite que Blazor realice la redireccion
+            throw;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error inesperado. Por favor, intenta de nuevo. ({ex.Message})";
         }
         finally
         {

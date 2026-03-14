@@ -53,7 +53,7 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // Accion -> Usuario (UsuarioId), Usuario (ResponsableId), Maestro FKs
+        // Accion -> Usuario (UsuarioId), ResponsableProceso (ResponsableId), Maestro FKs
         modelBuilder.Entity<Accion>(entity =>
         {
             entity.HasIndex(e => e.Id);
@@ -63,7 +63,7 @@ public class AppDbContext : DbContext
                 .HasForeignKey(a => a.UsuarioId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasOne<Usuario>()
+            entity.HasOne<ResponsableProceso>()
                 .WithMany()
                 .HasForeignKey(a => a.ResponsableId)
                 .OnDelete(DeleteBehavior.Restrict);
