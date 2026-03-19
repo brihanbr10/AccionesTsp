@@ -14,12 +14,19 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Lista de Acciones</h2>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 align-items-center">
+        <div class="input-group" style="width: 200px;">
+            <span class="input-group-text">
+                <i class="bi bi-search"></i>
+            </span>
+            <input type="text" class="form-control" placeholder="Filtrar por código..." 
+                   @bind="filtroId" @bind:event="oninput" />
+        </div>
         <a href="/reportes" class="btn btn-outline-success">
             <i class="bi bi-file-earmark-spreadsheet me-1"></i>Reportes
         </a>
         <a href="/acciones/create" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Nueva Accion
+            <i class="bi bi-plus-circle"></i> Nueva Acción
         </a>
     </div>
 </div>
@@ -37,13 +44,13 @@ else if (!acciones.Any())
 {
     <div class="alert alert-info">
         <h4 class="alert-heading">No hay acciones</h4>
-        <p>Aun no has creado ninguna accion. Haz clic en "Nueva Accion" para comenzar.</p>
+        <p>Aún no has creado ninguna acción. Haz clic en "Nueva Acción" para comenzar.</p>
     </div>
 }
 else
 {
     <div class="accordion" id="accordionAcciones">
-        @foreach (var accion in acciones)
+        @foreach (var accion in accionesFiltradasList)
         {
             var collapseId = $"collapse-{accion.Id}";
             var headingId = $"heading-{accion.Id}";
@@ -55,7 +62,7 @@ else
                             aria-expanded="false" aria-controls="@collapseId">
                         <div class="d-flex w-100 justify-content-between align-items-center me-3">
                             <div>
-                                <strong class="me-3">ACC-@accion.Id</strong>
+                                <strong class="me-3">@accion.Id</strong>
                                 <span>@accion.Descripcion</span>
                             </div>
                             <div class="d-flex align-items-center gap-2">
@@ -74,10 +81,10 @@ else
                         <!-- Informacion General -->
                         <div class="card mb-3">
                             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                                <span><i class="bi bi-info-circle me-2"></i>Informacion General</span>
+                                <span><i class="bi bi-info-circle me-2"></i>Información General</span>
                                 <div>
                                     <a href="/acciones/edit/@accion.Id" class="btn btn-sm btn-light me-1">
-                                        <i class="bi bi-pencil"></i> Editar
+                                        <i class="bi bi-pencil"></i> Seguimiento
                                     </a>
                                     <button class="btn btn-sm btn-danger" @onclick="() => ShowDeleteConfirm(accion)">
                                         <i class="bi bi-trash"></i> Eliminar
@@ -95,11 +102,11 @@ else
                                         <span>@accion.Fecha.ToString("dd/MM/yyyy")</span>
                                     </div>
                                     <div class="col-md-4 mb-2">
-                                        <strong class="d-block text-muted small">Tipo de Accion</strong>
+                                        <strong class="d-block text-muted small">Tipo de Acción</strong>
                                         <span>@TipoAccionTexto(accion.TipoAccionId)</span>
                                     </div>
                                     <div class="col-md-4 mb-2">
-                                        <strong class="d-block text-muted small">Organizacion</strong>
+                                        <strong class="d-block text-muted small">Organización</strong>
                                         <span>@NombreMaestro(organizaciones, accion.OrganizacionId)</span>
                                     </div>
                                     <div class="col-md-4 mb-2">
@@ -119,7 +126,7 @@ else
                                         <span>@NombreMaestro(entidades, accion.EntidadId)</span>
                                     </div>
                                     <div class="col-md-4 mb-2">
-                                        <strong class="d-block text-muted small">Sistema de Gestion</strong>
+                                        <strong class="d-block text-muted small">Sistema de Gestión</strong>
                                         <span>@NombreMaestro(sistemasGestion, accion.SistemaGestionId)</span>
                                     </div>
                                     <div class="col-md-4 mb-2">
@@ -127,7 +134,7 @@ else
                                         <span>@NombreMaestro(sitios, accion.SitioId)</span>
                                     </div>
                                     <div class="col-md-12 mt-2">
-                                        <strong class="d-block text-muted small">Descripcion del hallazgo</strong>
+                                        <strong class="d-block text-muted small">Descripción del hallazgo</strong>
                                         <span>@accion.Descripcion</span>
                                     </div>
                                 </div>
@@ -137,19 +144,19 @@ else
                         <!-- Solucion -->
                         <div class="card mb-3">
                             <div class="card-header bg-success text-white">
-                                <i class="bi bi-lightbulb me-2"></i>Solucion
+                                <i class="bi bi-lightbulb me-2"></i>Solución
                             </div>
                             <div class="card-body">
                                 @if (accion.Solucion != null)
                                 {
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <p><strong>Correccion Propuesta:</strong> @accion.Solucion.CorreccionPropuesta</p>
-                                            <p><strong>Analisis de Causa:</strong> @accion.Solucion.AnalisisCausa</p>
+                                            <p><strong>Corrección Propuesta:</strong> @accion.Solucion.CorreccionPropuesta</p>
+                                            <p><strong>Análisis de Causa:</strong> @accion.Solucion.AnalisisCausa</p>
                                         </div>
                                         <div class="col-md-6">
                                             <p><strong>Investigador:</strong> @(accion.Solucion.UsuarioInvestiga?.Username ?? "-")</p>
-                                            <p><strong>Fecha Investigacion:</strong> @accion.Solucion.FechaInvestigacion.ToString("dd/MM/yyyy")</p>
+                                            <p><strong>Fecha Investigación:</strong> @accion.Solucion.FechaInvestigacion.ToString("dd/MM/yyyy")</p>
                                             <p><strong>Coordinador:</strong> @(accion.Solucion.UsuarioCoordina?.Username ?? "-")</p>
                                             <p><strong>Fecha Compromiso:</strong> @accion.Solucion.FechaCompromiso.ToString("dd/MM/yyyy")</p>
                                         </div>
@@ -168,8 +175,9 @@ else
                                                         <th>Agencia</th>
                                                         <th>Responsable</th>
                                                         <th>Fecha compromiso</th>
+                                                        <th>Observaciones</th>
                                                         <th>Estado</th>
-                                                        <th>Ejecucion</th>
+                                                        <th>Ejecución</th>
                                                         <th>Evidencia</th>
                                                     </tr>
                                                 </thead>
@@ -181,6 +189,9 @@ else
                                                             <td>@actividad.Agencia</td>
                                                             <td>@(actividad.Responsable?.Username ?? "-")</td>
                                                             <td>@actividad.Fecha.ToString("dd/MM/yyyy")</td>
+                                                            <td>
+                                                                <small>@(string.IsNullOrEmpty(actividad.Observaciones) ? "-" : actividad.Observaciones)</small>
+                                                            </td>
                                                             <td>
                                                                 <span class="badge @(actividad.Ejecutada ? "bg-success" : "bg-warning text-dark")">
                                                                     @(actividad.Ejecutada ? "Ejecutada" : "Pendiente")
@@ -208,7 +219,7 @@ else
                                 }
                                 else
                                 {
-                                    <p class="text-muted fst-italic mb-0">Sin solucion registrada.</p>
+                                    <p class="text-muted fst-italic mb-0">Sin solución registrada.</p>
                                 }
                             </div>
                         </div>
@@ -216,7 +227,7 @@ else
                         <!-- Confirmacion Plan de Accion -->
                         <div class="card mb-3">
                             <div class="card-header bg-warning text-dark">
-                                <i class="bi bi-clipboard-check me-2"></i>Confirmacion del Plan de Accion
+                                <i class="bi bi-clipboard-check me-2"></i>Confirmación del Plan de Acción
                             </div>
                             <div class="card-body">
                                 @if (accion.ConfirmacionPlanAccion != null)
@@ -229,7 +240,7 @@ else
                                         <div class="col-md-6">
                                             <p><strong>Responsable:</strong> @(accion.ConfirmacionPlanAccion.Responsable?.Username ?? "-")</p>
                                             <p>
-                                                <strong>Cumplio el Plan:</strong>
+                                                <strong>Cumplió el Plan:</strong>
                                                 @if (accion.ConfirmacionPlanAccion.CumplioPlan)
                                                 {
                                                     <span class="badge bg-success">Si</span>
@@ -244,7 +255,7 @@ else
                                 }
                                 else
                                 {
-                                    <p class="text-muted fst-italic mb-0">Sin confirmacion registrada.</p>
+                                    <p class="text-muted fst-italic mb-0">Sin confirmación registrada.</p>
                                 }
                             </div>
                         </div>
@@ -279,7 +290,7 @@ else
                                 }
                                 else
                                 {
-                                    <p class="text-muted fst-italic mb-0">Sin evaluacion de eficacia.</p>
+                                    <p class="text-muted fst-italic mb-0">Sin evaluación de eficacia.</p>
                                 }
                             </div>
                         </div>
@@ -321,11 +332,11 @@ else
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Confirmar Eliminacion</h5>
+                    <h5 class="modal-title">Confirmar Eliminación</h5>
                     <button type="button" class="btn-close" @onclick="CloseDeleteModal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Estas seguro de que deseas eliminar esta accion?</p>
+                    <p>¿Estás seguro de que deseas eliminar esta acción?</p>
                     @if (actividadToDelete != null)
                     {
                         <p><strong>ACC-@actividadToDelete.Id:</strong> @actividadToDelete.Descripcion</p>
@@ -345,6 +356,7 @@ else
     private bool isLoading = true;
     private bool showDeleteModal = false;
     private Accion? actividadToDelete;
+    private string filtroId = string.Empty;
 
     // Listas para resolver nombres
     private List<Maestro> origenes = new();
@@ -353,6 +365,10 @@ else
     private List<Maestro> organizaciones = new();
     private List<Maestro> sitios = new();
     private List<Proceso> procesos = new();
+
+    private List<Accion> accionesFiltradasList => string.IsNullOrWhiteSpace(filtroId) 
+        ? acciones 
+        : acciones.Where(a => a.Id.ToString().StartsWith(filtroId)).ToList();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

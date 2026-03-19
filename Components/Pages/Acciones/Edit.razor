@@ -6,6 +6,7 @@
 @inject AppDbContext DbContext
 @inject IEmailService EmailService
 @inject IFileService FileService
+@inject IJSRuntime JSRuntime
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 @using ActividadApp.Data
 @using ActividadApp.Models
@@ -14,11 +15,11 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.EntityFrameworkCore
 
-<PageTitle>Editar Accion</PageTitle>
+<PageTitle>Editar Acción</PageTitle>
 
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Editar Accion</h2>
+        <h2>Editar Acción</h2>
         <a href="/acciones" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i>Volver
         </a>
@@ -30,13 +31,13 @@
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Cargando...</span>
             </div>
-            <p class="mt-2">Cargando accion...</p>
+            <p class="mt-2">Cargando acción...</p>
         </div>
     }
     else if (accion == null)
     {
         <div class="alert alert-danger">
-            No se encontro la accion solicitada.
+            No se encontró la acción solicitada.
         </div>
         <a href="/acciones" class="btn btn-secondary">Volver</a>
     }
@@ -56,10 +57,10 @@
             </div>
         }
 
-        <!-- SECCION 1: Informacion General (Solo lectura) -->
+        <!-- SECCION 1: Información General (Solo lectura) -->
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-primary text-white">
-                <i class="bi bi-info-circle me-2"></i>1. Informacion General
+                <i class="bi bi-info-circle me-2"></i>1. Información General
             </div>
             <div class="card-body">
                 <div class="row">
@@ -72,11 +73,11 @@
                         <input type="text" class="form-control" value="@accion.Fecha.ToString("dd/MM/yyyy")" readonly />
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label class="form-label">Tipo de Accion</label>
+                        <label class="form-label">Tipo de Acción</label>
                         <input type="text" class="form-control" value="@TipoAccionTexto" readonly />
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label class="form-label">Organizacion</label>
+                        <label class="form-label">Organización</label>
                         <input type="text" class="form-control" value="@NombreMaestro(organizaciones, accion.OrganizacionId)" readonly />
                     </div>
                     <div class="col-md-4 mb-3">
@@ -96,7 +97,7 @@
                         <input type="text" class="form-control" value="@NombreMaestro(entidades, accion.EntidadId)" readonly />
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label class="form-label">Sistema de Gestion</label>
+                        <label class="form-label">Sistema de Gestión</label>
                         <input type="text" class="form-control" value="@NombreMaestro(sistemasGestion, accion.SistemaGestionId)" readonly />
                     </div>
                     <div class="col-md-4 mb-3">
@@ -104,69 +105,12 @@
                         <input type="text" class="form-control" value="@NombreMaestro(sitios, accion.SitioId)" readonly />
                     </div>
                     <div class="col-md-12 mb-3">
-                        <label class="form-label">Descripcion del hallazgo</label>
+                        <label class="form-label">Descripción del hallazgo</label>
                         <textarea class="form-control" rows="3" readonly>@accion.Descripcion</textarea>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- SEGUIMIENTO SGI (Solo administradores) -->
-        @if (esAdmin)
-        {
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-journal-text me-2"></i>Seguimiento SGI</span>
-                <div class="form-check form-switch mb-0">
-                    <input class="form-check-input" type="checkbox" @bind="mostrarSeguimientoSgi" />
-                    <label class="form-check-label text-white">Mostrar</label>
-                </div>
-            </div>
-            @if (mostrarSeguimientoSgi)
-            {
-                <div class="card-body">
-                    <!-- Formulario nuevo seguimiento -->
-                    <div class="row mb-3">
-                        <div class="col-md-9">
-                            <textarea class="form-control form-control-sm" rows="2" @bind="nuevoComentarioSgi"
-                                      placeholder="Escriba un comentario de seguimiento..."></textarea>
-                        </div>
-                        <div class="col-md-3 d-flex align-items-end">
-                            <button type="button" class="btn btn-sm btn-dark w-100" @onclick="AgregarSeguimientoSgi"
-                                    disabled="@string.IsNullOrWhiteSpace(nuevoComentarioSgi)">
-                                <i class="bi bi-plus-circle me-1"></i>Agregar
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Lista de seguimientos -->
-                    @if (seguimientosSgi.Any())
-                    {
-                        <div class="list-group">
-                            @foreach (var seg in seguimientosSgi.OrderByDescending(s => s.Fecha))
-                            {
-                                <div class="list-group-item">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <p class="mb-1">@seg.Comentario</p>
-                                            <small class="text-muted">
-                                                <i class="bi bi-person me-1"></i>@(seg.Usuario?.Nombre ?? username)
-                                                <i class="bi bi-calendar ms-2 me-1"></i>@seg.Fecha.ToString("dd/MM/yyyy HH:mm")
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <p class="text-muted fst-italic mb-0">Sin seguimientos registrados.</p>
-                    }
-                </div>
-            }
-        </div>
-        }
 
         <!-- SECCION 2: Solucion -->
         <div class="card shadow-sm mb-4">
@@ -184,20 +128,12 @@
                     {
                         <!-- Campos de solo lectura cuando la solucion ya existe -->
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Analisis de Causa o Proposito de mejora</label>
-                                <textarea class="form-control" rows="3" readonly>@solucion.AnalisisCausa</textarea>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Correccion Propuesta</label>
-                                <textarea class="form-control" rows="3" readonly>@solucion.CorreccionPropuesta</textarea>
-                            </div>
                             <div class="col-md-3 mb-3">
                                 <label class="form-label">Investigador</label>
                                 <input type="text" class="form-control" value="@NombreUsuario(solucion.UsuarioInvestigaId)" readonly />
                             </div>
                             <div class="col-md-3 mb-3">
-                                <label class="form-label">Fecha Investigacion</label>
+                                <label class="form-label">Fecha Investigación</label>
                                 <input type="text" class="form-control" value="@solucion.FechaInvestigacion.ToString("dd/MM/yyyy")" readonly />
                             </div>
                             <div class="col-md-3 mb-3">
@@ -208,20 +144,20 @@
                                 <label class="form-label">Fecha Compromiso</label>
                                 <input type="text" class="form-control" value="@solucion.FechaCompromiso.ToString("dd/MM/yyyy")" readonly />
                             </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Corrección Propuesta</label>
+                                <textarea class="form-control" rows="3" readonly>@solucion.CorreccionPropuesta</textarea>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Análisis de Causa o Propósito de mejora</label>
+                                <textarea class="form-control" rows="3" readonly>@solucion.AnalisisCausa</textarea>
+                            </div>
                         </div>
                     }
                     else
                     {
                         <!-- Campos editables cuando es nueva solucion -->
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Analisis de Causa o Proposito de mejora <span class="text-danger">*</span></label>
-                                <textarea class="form-control" @bind="solucion.AnalisisCausa" rows="3"></textarea>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Correccion Propuesta <span class="text-danger">*</span></label>
-                                <textarea class="form-control" @bind="solucion.CorreccionPropuesta" rows="3"></textarea>
-                            </div>
                             <div class="col-md-3 mb-3">
                                 <label class="form-label">Investigador <span class="text-danger">*</span></label>
                                 <select class="form-select" @bind="solucion.UsuarioInvestigaId">
@@ -233,8 +169,8 @@
                                 </select>
                             </div>
                             <div class="col-md-3 mb-3">
-                                <label class="form-label">Fecha Investigacion <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" @bind="fechaInvestigacion" />
+                                <label class="form-label">Fecha Investigación <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" @bind="fechaInvestigacion" @bind:after="ValidarFechas" />
                             </div>
                             <div class="col-md-3 mb-3">
                                 <label class="form-label">Coordinador <span class="text-danger">*</span></label>
@@ -248,7 +184,15 @@
                             </div>
                             <div class="col-md-3 mb-3">
                                 <label class="form-label">Fecha Compromiso <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" @bind="fechaCompromiso" />
+                                <input type="date" class="form-control" @bind="fechaCompromiso" @bind:after="ValidarFechas" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Corrección Propuesta <span class="text-danger">*</span></label>
+                                <textarea class="form-control" @bind="solucion.CorreccionPropuesta" rows="3"></textarea>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Análisis de Causa o Propósito de mejora <span class="text-danger">*</span></label>
+                                <textarea class="form-control" @bind="solucion.AnalisisCausa" rows="3"></textarea>
                             </div>
                         </div>
                     }
@@ -257,7 +201,7 @@
                     <hr />
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h6 class="mb-0"><i class="bi bi-list-task me-1"></i>Actividades del Plan</h6>
-                        @if (!tieneConfirmacionGuardada && !tieneSolucionGuardada)
+                        @if (puedeEditarActividades)
                         {
                             <button type="button" class="btn btn-sm btn-outline-success" @onclick="AgregarActividad">
                                 <i class="bi bi-plus-circle me-1"></i>Agregar
@@ -368,6 +312,7 @@
                                             <th>Agencia</th>
                                             <th>Responsable</th>
                                             <th>Fecha</th>
+                                            <th>Observaciones</th>
                                             @if (tieneConfirmacionGuardada)
                                             {
                                                 <th>Estado</th>
@@ -391,6 +336,9 @@
                                                     <td>@actividades[index].Agencia</td>
                                                     <td>@NombreUsuario(actividades[index].ResponsableId)</td>
                                                     <td>@actividades[index].Fecha.ToString("dd/MM/yyyy")</td>
+                                                    <td>
+                                                        <small>@(string.IsNullOrEmpty(actividades[index].Observaciones) ? "-" : actividades[index].Observaciones)</small>
+                                                    </td>
                                                     <td>
                                                         <span class="badge @(actividades[index].Ejecutada ? "bg-success" : "bg-warning text-dark")">
                                                             @(actividades[index].Ejecutada ? "Ejecutada" : "Pendiente")
@@ -423,11 +371,15 @@
                                                             }
                                                         </select>
                                                     </td>
-                                                    <td><input type="date" class="form-control form-control-sm" @bind="actividades[index].Fecha" /></td>
+                                                    <td><input type="date" class="form-control form-control-sm" @bind="actividades[index].Fecha" @bind:after="() => ValidarFechaActividad(index)" /></td>
+                                                    <td><textarea class="form-control form-control-sm" rows="2" @bind="actividades[index].Observaciones" placeholder="Observaciones..."></textarea></td>
                                                     <td>
-                                                        <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => EliminarActividad(index)">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
+                                                        @if (puedeEditarActividades)
+                                                        {
+                                                            <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => EliminarActividad(index)">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        }
                                                     </td>
                                                 }
                                             </tr>
@@ -459,12 +411,71 @@
             }
         </div>
 
+
+        <!-- SEGUIMIENTO SGI (Solo administradores) -->
+        @if (esAdmin)
+        {
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-journal-text me-2"></i>Seguimiento SGI</span>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" @bind="mostrarSeguimientoSgi" />
+                        <label class="form-check-label text-white">Mostrar</label>
+                    </div>
+                </div>
+                @if (mostrarSeguimientoSgi)
+                {
+                    <div class="card-body">
+                        <!-- Formulario nuevo seguimiento -->
+                        <div class="row mb-3">
+                            <div class="col-md-9">
+                                <textarea class="form-control form-control-sm" rows="2" @bind="nuevoComentarioSgi"
+                                          placeholder="Escriba un comentario de seguimiento..."></textarea>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button type="button" class="btn btn-sm btn-dark w-100" @onclick="AgregarSeguimientoSgi"
+                                        disabled="@string.IsNullOrWhiteSpace(nuevoComentarioSgi)">
+                                    <i class="bi bi-plus-circle me-1"></i>Agregar
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Lista de seguimientos -->
+                        @if (seguimientosSgi.Any())
+                        {
+                            <div class="list-group">
+                                @foreach (var seg in seguimientosSgi.OrderByDescending(s => s.Fecha))
+                                {
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <p class="mb-1">@seg.Comentario</p>
+                                                <small class="text-muted">
+                                                    <i class="bi bi-person me-1"></i>@(seg.Usuario?.Nombre ?? username)
+                                                    <i class="bi bi-calendar ms-2 me-1"></i>@seg.Fecha.ToString("dd/MM/yyyy HH:mm")
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted fst-italic mb-0">Sin seguimientos registrados.</p>
+                        }
+                    </div>
+                }
+            </div>
+        }
+
+
         @if (tieneSolucionGuardada)
         {
-        <!-- SECCION 3: Confirmacion Plan de Accion -->
+        <!-- SECCION 3: Confirmación del Plan de Acción -->
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-clipboard-check me-2"></i>3. Confirmacion del Plan de Accion</span>
+                <span><i class="bi bi-clipboard-check me-2"></i>3. Confirmación del Plan de Acción</span>
                 @if (todasActividadesEjecutadas || tieneConfirmacionGuardada)
                 {
                     <div class="form-check form-switch mb-0">
@@ -498,7 +509,7 @@
                                 <input type="text" class="form-control" value="@NombreUsuario(confirmacion.ResponsableId)" readonly />
                             </div>
                             <div class="col-md-3 mb-3">
-                                <label class="form-label">Cumplio el Plan</label>
+                                <label class="form-label">Cumplió el Plan</label>
                                 <div class="mt-2">
                                     @if (confirmacion.CumplioPlan)
                                     {
@@ -534,7 +545,7 @@
                                 </select>
                             </div>
                             <div class="col-md-3 mb-3">
-                                <label class="form-label">Cumplio el Plan</label>
+                                <label class="form-label">Cumplió el Plan</label>
                                 <div class="form-check form-switch mt-2">
                                     <input class="form-check-input" type="checkbox" @bind="confirmacion.CumplioPlan" />
                                     <label class="form-check-label">@(confirmacion.CumplioPlan ? "Si" : "No")</label>
@@ -673,6 +684,7 @@
     private bool incluirEficacia = false;
     private bool mostrarSeguimientoSgi = false;
     private bool esAdmin = false;
+    private bool esInvestigador = false;
     private string nuevoComentarioSgi = string.Empty;
 
     private bool tieneSolucionGuardada = false;
@@ -680,6 +692,8 @@
     private int estadoAnterior = 0;
 
     private bool todasActividadesEjecutadas => actividades.Any() && actividades.All(a => a.Ejecutada);
+
+    private bool puedeEditarActividades => !tieneConfirmacionGuardada && (esAdmin || esInvestigador || !tieneSolucionGuardada);
 
     private string errorMessage = string.Empty;
     private string successMessage = string.Empty;
@@ -753,6 +767,8 @@
                 fechaInvestigacion = solucion.FechaInvestigacion;
                 fechaCompromiso = solucion.FechaCompromiso;
                 actividades = solucion.Actividades ?? new();
+                // Verificar si el usuario actual es el investigador
+                esInvestigador = userSession?.UserId == solucion.UsuarioInvestigaId;
             }
 
             // Precargar confirmacion
@@ -929,6 +945,20 @@
                     isLoading = false;
                     return;
                 }
+
+                if (fechaCompromiso.Date < fechaInvestigacion.Date)
+                {
+                    errorMessage = "La fecha de compromiso no puede ser menor a la fecha de investigacion.";
+                    isLoading = false;
+                    return;
+                }
+
+                if (actividades.Any(a => a.Fecha.Date < fechaInvestigacion.Date || a.Fecha.Date > fechaCompromiso.Date))
+                {
+                    errorMessage = "La fecha de las actividades debe estar entre la fecha de investigacion y la fecha de compromiso.";
+                    isLoading = false;
+                    return;
+                }
             }
 
             if (incluirSolucion && tieneSolucionGuardada && !tieneConfirmacionGuardada)
@@ -1058,6 +1088,30 @@
         finally
         {
             isLoading = false;
+        }
+    }
+
+    private async Task ValidarFechas()
+    {
+        if (fechaCompromiso.Date < fechaInvestigacion.Date)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "La fecha de compromiso no puede ser menor a la fecha de investigacion.");
+            fechaCompromiso = fechaInvestigacion;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ValidarFechaActividad(int index)
+    {
+        if (index >= 0 && index < actividades.Count)
+        {
+            var act = actividades[index];
+            if (act.Fecha.Date < fechaInvestigacion.Date || act.Fecha.Date > fechaCompromiso.Date)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "La fecha de la actividad debe estar entre la fecha de investigacion y la fecha de compromiso.");
+                act.Fecha = fechaCompromiso;
+                StateHasChanged();
+            }
         }
     }
 }

@@ -5,6 +5,7 @@
 @inject NavigationManager Navigation
 @inject AppDbContext DbContext
 @inject IEmailService EmailService
+@inject IJSRuntime JSRuntime
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 @using ActividadApp.Data
@@ -13,7 +14,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.EntityFrameworkCore
 
-<PageTitle>Nueva Accion</PageTitle>
+<PageTitle>Nueva Acción</PageTitle>
 
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -37,10 +38,10 @@
         </div>
     }
 
-    <!-- SECCION 1: Informacion General -->
+    <!-- SECCION 1: Información General -->
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-primary text-white">
-            <i class="bi bi-info-circle me-2"></i>1. Informacion General
+            <i class="bi bi-info-circle me-2"></i>1. Información General
         </div>
         <div class="card-body">
             <div class="row">
@@ -53,7 +54,7 @@
                     <input type="date" class="form-control" @bind="fecha" />
                 </div>
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">Tipo de Accion <span class="text-danger">*</span></label>
+                    <label class="form-label">Tipo de Acción <span class="text-danger">*</span></label>
                     <div class="mt-2">
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="tipoAccion" id="preventiva"
@@ -76,7 +77,7 @@
                     </div>
                 </div>
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">Organizacion <span class="text-danger">*</span></label>
+                    <label class="form-label">Organización <span class="text-danger">*</span></label>
                     <select class="form-select" @bind="accion.OrganizacionId">
                         <option value="0">Seleccionar...</option>
                         @foreach (var item in organizaciones)
@@ -121,7 +122,7 @@
                     </select>
                 </div>
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">Sistema de Gestion <span class="text-danger">*</span></label>
+                    <label class="form-label">Sistema de Gestión <span class="text-danger">*</span></label>
                     <select class="form-select" @bind="accion.SistemaGestionId">
                         <option value="0">Seleccionar...</option>
                         @foreach (var item in sistemasGestion)
@@ -141,18 +142,18 @@
                     </select>
                 </div>
                 <div class="col-md-12 mb-3">
-                    <label class="form-label">Descripcion del hallazgo<span class="text-danger">*</span></label>
+                    <label class="form-label">Descripción del hallazgo<span class="text-danger">*</span></label>
                     <textarea class="form-control" @bind="accion.Descripcion" rows="3"
-                              placeholder="Descripcion de la accion"></textarea>
+                              placeholder="Descripción de la acción"></textarea>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- SECCION 2: Solucion -->
+    <!-- SECCION 2: Solución -->
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-lightbulb me-2"></i>2. Solucion</span>
+            <span><i class="bi bi-lightbulb me-2"></i>2. Solución</span>
             <div class="form-check form-switch mb-0">
                 <input class="form-check-input" type="checkbox" @bind="incluirSolucion" />
                 <label class="form-check-label text-white">Incluir</label>
@@ -163,14 +164,6 @@
             <div class="card-body">
                 <div class="row">
                     
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Analisis de Causa o Propósito de mejora <span class="text-danger">*</span></label>
-                        <textarea class="form-control" @bind="solucion.AnalisisCausa" rows="3"></textarea>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Correccion Propuesta <span class="text-danger">*</span></label>
-                        <textarea class="form-control" @bind="solucion.CorreccionPropuesta" rows="3"></textarea>
-                    </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Investigador <span class="text-danger">*</span></label>
                         <select class="form-select" @bind="solucion.UsuarioInvestigaId">
@@ -182,8 +175,8 @@
                         </select>
                     </div>
                     <div class="col-md-3 mb-3">
-                        <label class="form-label">Fecha Investigacion <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" @bind="fechaInvestigacion" />
+                        <label class="form-label">Fecha Investigación <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" @bind="fechaInvestigacion" @bind:after="ValidarFechas" />
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Coordinador <span class="text-danger">*</span></label>
@@ -197,7 +190,15 @@
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Fecha Compromiso <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" @bind="fechaCompromiso" />
+                        <input type="date" class="form-control" @bind="fechaCompromiso" @bind:after="ValidarFechas" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Corrección Propuesta <span class="text-danger">*</span></label>
+                        <textarea class="form-control" @bind="solucion.CorreccionPropuesta" rows="3"></textarea>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Análisis de Causa o Propósito de mejora <span class="text-danger">*</span></label>
+                        <textarea class="form-control" @bind="solucion.AnalisisCausa" rows="3"></textarea>
                     </div>
                 </div>
 
@@ -238,7 +239,7 @@
                                                 }
                                             </select>
                                         </td>
-                                        <td><input type="date" class="form-control form-control-sm" @bind="actividades[index].Fecha" /></td>
+                                        <td><input type="date" class="form-control form-control-sm" @bind="actividades[index].Fecha" @bind:after="() => ValidarFechaActividad(index)" /></td>
                                         <td>
                                             <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => EliminarActividad(index)">
                                                 <i class="bi bi-trash"></i>
@@ -407,6 +408,20 @@
                     return;
                 }
 
+                if (fechaCompromiso.Date < fechaInvestigacion.Date)
+                {
+                    errorMessage = "La fecha de compromiso no puede ser menor a la fecha de investigacion.";
+                    isLoading = false;
+                    return;
+                }
+
+                if (actividades.Any(a => a.Fecha.Date < fechaInvestigacion.Date || a.Fecha.Date > fechaCompromiso.Date))
+                {
+                    errorMessage = "La fecha de las actividades debe estar entre la fecha de investigacion y la fecha de compromiso.";
+                    isLoading = false;
+                    return;
+                }
+
                 solucion.FechaInvestigacion = fechaInvestigacion;
                 solucion.FechaCompromiso = fechaCompromiso;
                 solucion.Actividades = actividades;
@@ -466,6 +481,30 @@
         finally
         {
             isLoading = false;
+        }
+    }
+
+    private async Task ValidarFechas()
+    {
+        if (fechaCompromiso.Date < fechaInvestigacion.Date)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "La fecha de compromiso no puede ser menor a la fecha de investigacion.");
+            fechaCompromiso = fechaInvestigacion;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ValidarFechaActividad(int index)
+    {
+        if (index >= 0 && index < actividades.Count)
+        {
+            var act = actividades[index];
+            if (act.Fecha.Date < fechaInvestigacion.Date || act.Fecha.Date > fechaCompromiso.Date)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "La fecha de la actividad debe estar entre la fecha de investigacion y la fecha de compromiso.");
+                act.Fecha = fechaCompromiso;
+                StateHasChanged();
+            }
         }
     }
 }
