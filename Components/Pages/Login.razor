@@ -86,7 +86,7 @@
         </div>
         
         <div class="auth-right">
-            <h1 class="auth-title">Bienvenido de nuevo</h1>
+            <h1 class="auth-title">Bienvenido</h1>
             <p class="auth-subtitle">Ingresa tus credenciales para continuar</p>
 
             @if (!string.IsNullOrEmpty(errorMessage))
@@ -116,11 +116,11 @@
                     @if (isLoading)
                     {
                         <span class="spinner-border spinner-border-sm"></span>
-                        <span>Iniciando sesion...</span>
+                        <span>Iniciando sesión...</span>
                     }
                     else
                     {
-                        <span>Iniciar sesion</span>
+                        <span>Iniciar sesión</span>
                     }
                 </button>
             </EditForm>

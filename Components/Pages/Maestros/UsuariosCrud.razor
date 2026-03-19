@@ -13,12 +13,12 @@
 
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-people-fill me-2"></i>Gestion de Usuarios</h2>
+        <h2><i class="bi bi-people-fill me-2"></i>Gestión de Usuarios</h2>
     </div>
 
     @if (!esAdmin)
     {
-        <div class="alert alert-danger">No tiene permisos para acceder a esta seccion.</div>
+        <div class="alert alert-danger">No tiene permisos para acceder a esta sección.</div>
     }
     else
     {
@@ -33,7 +33,7 @@
         <!-- Usuarios pendientes de activacion -->
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-warning text-dark">
-                <i class="bi bi-clock-history me-2"></i>Usuarios Pendientes de Activacion
+                <i class="bi bi-clock-history me-2"></i>Usuarios Pendientes de Activación
                 @if (usuariosPendientes.Any())
                 {
                     <span class="badge bg-danger ms-2">@usuariosPendientes.Count</span>
@@ -60,11 +60,11 @@
                                 <th>Nombre</th>
                                 <th>Email</th>
                                 <th>Cedula</th>
-                                <th>Organizacion</th>
+                                <th>Organización</th>
                                 <th>Cargo</th>
                                 <th>Registro</th>
                                 <th>Rol</th>
-                                <th class="text-center" style="width:120px">Accion</th>
+                                <th class="text-center" style="width:120px">Acción</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -120,7 +120,7 @@
                                 <th>Email</th>
                                 <th>Organizacion</th>
                                 <th>Rol</th>
-                                <th class="text-center" style="width:120px">Accion</th>
+                                <th class="text-center" style="width:120px">Acción</th>
                             </tr>
                         </thead>
                         <tbody>

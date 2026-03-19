@@ -67,7 +67,7 @@
                     <i class="bi bi-file-earmark-text display-4 text-primary mb-3 d-block"></i>
                     <h5 class="card-title">Reporte General</h5>
                     <p class="card-text text-muted">
-                        Descarga el reporte general de las acciones sin detalles de los planes de accion.
+                        Descarga el reporte general de las acciones sin detalles de los planes de acción.
                     </p>
                     <button class="btn btn-primary" @onclick="DescargarGeneral" disabled="@isLoading">
                         @if (isLoading && tipoReporte == "general")
@@ -92,7 +92,7 @@
                     <i class="bi bi-file-earmark-ruled display-4 text-success mb-3 d-block"></i>
                     <h5 class="card-title">Reporte Detallado</h5>
                     <p class="card-text text-muted">
-                        Descarga el reporte con todas las actividades del plan de accion por cada accion.
+                        Descarga el reporte con todas las actividades del plan de accion por cada acción.
                     </p>
                     <button class="btn btn-success" @onclick="DescargarDetallado" disabled="@isLoading">
                         @if (isLoading && tipoReporte == "detallado")

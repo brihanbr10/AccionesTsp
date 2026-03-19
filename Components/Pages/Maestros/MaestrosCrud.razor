@@ -18,7 +18,7 @@
 
     @if (!esAdmin)
     {
-        <div class="alert alert-danger">No tiene permisos para acceder a esta seccion.</div>
+        <div class="alert alert-danger">No tiene permisos para acceder a esta sección.</div>
     }
     else
     {
@@ -35,7 +35,7 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-8">
-                        <input type="text" class="form-control" placeholder="Descripcion..." @bind="nuevaDescripcion" />
+                        <input type="text" class="form-control" placeholder="Descripción..." @bind="nuevaDescripcion" />
                     </div>
                     <div class="col-md-4">
                         @if (editandoId.HasValue)
@@ -129,7 +129,7 @@
     private string TituloMaestro => Tipo?.ToUpper() switch
     {
         "ORIGEN" => "Origenes",
-        "SISGESTION" => "Sistemas de Gestion",
+        "SISGESTION" => "Sistemas de Gestión",
         "ORGANIZACION" => "Organizaciones",
         "ENTIDAD" => "Entidades",
         "CARGO" => "Cargos",
@@ -184,7 +184,7 @@
     {
         if (string.IsNullOrWhiteSpace(nuevaDescripcion))
         {
-            mensaje = "La descripcion es requerida.";
+            mensaje = "La descripción es requerida.";
             esError = true;
             return;
         }
@@ -222,7 +222,7 @@
 
         if (string.IsNullOrWhiteSpace(nuevaDescripcion))
         {
-            mensaje = "La descripcion es requerida.";
+            mensaje = "La descripción es requerida.";
             esError = true;
             return;
         }
