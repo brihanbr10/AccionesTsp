@@ -12,6 +12,11 @@ RUN dotnet publish -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
+# Set UTF-8 encoding for proper character display
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+ENV DOTNET_CLI_CULTURE=es-ES
+
 # libgdiplus requerido por ClosedXML para generar Excel
 RUN apt-get update && apt-get install -y --no-install-recommends libgdiplus && rm -rf /var/lib/apt/lists/*
 

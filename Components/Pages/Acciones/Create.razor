@@ -217,8 +217,8 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>Descripcion</th>
-                                    <th>Agencia</th>
                                     <th>Responsable</th>
+                                    <th>Agencia</th>
                                     <th>Fecha</th>
                                     <th style="width:60px"></th>
                                 </tr>
@@ -229,9 +229,8 @@
                                     var index = i;
                                     <tr>
                                         <td><input class="form-control form-control-sm" @bind="actividades[index].Descripcion" /></td>
-                                        <td><input class="form-control form-control-sm" @bind="actividades[index].Agencia" /></td>
                                         <td>
-                                            <select class="form-select form-select-sm" @bind="actividades[index].ResponsableId">
+                                            <select class="form-select form-select-sm" @bind="actividades[index].ResponsableId" @bind:after="() => OnResponsableActividadChanged(index)">
                                                 <option value="0">Seleccionar...</option>
                                                 @foreach (var u in usuarios)
                                                 {
@@ -239,6 +238,7 @@
                                                 }
                                             </select>
                                         </td>
+                                        <td><input class="form-control form-control-sm" @bind="actividades[index].Agencia" readonly /></td>
                                         <td><input type="date" class="form-control form-control-sm" @bind="actividades[index].Fecha" @bind:after="() => ValidarFechaActividad(index)" /></td>
                                         <td>
                                             <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => EliminarActividad(index)">
@@ -321,7 +321,7 @@
             organizaciones = await DbContext.Maestros.AsNoTracking().Where(m => m.Tipo == TipoMaestro.ORGANIZACION).ToListAsync();
             sitios = await DbContext.Maestros.AsNoTracking().Where(m => m.Tipo == TipoMaestro.SITIO).ToListAsync();
             procesos = await DbContext.Procesos.AsNoTracking().Include(p => p.Responsable).ToListAsync();
-            usuarios = await DbContext.Users.AsNoTracking().ToListAsync();
+            usuarios = await DbContext.Users.AsNoTracking().Include(u => u.Agencia).ToListAsync();
             StateHasChanged();
         }
     }
@@ -353,6 +353,26 @@
             accion.ProcesoId = 0;
             nombreResponsable = string.Empty;
             accion.ResponsableId = 0;
+        }
+    }
+
+    private void OnResponsableActividadChanged(int index)
+    {
+        if (index >= 0 && index < actividades.Count)
+        {
+            var actividad = actividades[index];
+            if (actividad.ResponsableId > 0)
+            {
+                var usuario = usuarios.FirstOrDefault(u => u.Id == actividad.ResponsableId);
+                if (usuario?.Agencia != null)
+                {
+                    actividad.Agencia = usuario.Agencia.Descripcion;
+                }
+            }
+            else
+            {
+                actividad.Agencia = string.Empty;
+            }
         }
     }
 

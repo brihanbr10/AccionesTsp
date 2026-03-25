@@ -17,6 +17,16 @@ DotEnv.Load(options: new DotEnvOptions(ignoreExceptions: true));
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure Kestrel for UTF-8 encoding
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(2);
+});
+
+// Set UTF-8 as default encoding
+Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+System.Text.Encoding.UTF8.GetBytes("");
+
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
@@ -89,6 +99,13 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
+
+// Middleware to ensure UTF-8 charset in responses
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["Content-Type"] = "text/html; charset=utf-8";
+    await next();
+});
 
 app.UseStaticFiles();
 app.UseAntiforgery();
