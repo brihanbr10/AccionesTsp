@@ -190,7 +190,7 @@
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Fecha Compromiso <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" @bind="fechaCompromiso" @bind:after="ValidarFechas" />
+                        <input type="date" class="form-control" @bind="fechaCompromiso" min="@fechaInvestigacion.ToString("yyyy-MM-dd")" @bind:after="ValidarFechas" />
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Corrección Propuesta <span class="text-danger">*</span></label>
