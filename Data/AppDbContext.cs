@@ -22,6 +22,7 @@ public class AppDbContext : DbContext
     public DbSet<Proceso> Procesos { get; set; }
     public DbSet<ResponsableProceso> ResponsablesProceso { get; set; }
     public DbSet<SeguimientoSgi> SeguimientosSgi { get; set; }
+    public DbSet<SeguimientoActividad> SeguimientosActividades { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -166,6 +167,20 @@ public class AppDbContext : DbContext
             entity.HasOne<Accion>()
                 .WithMany(a => a.SeguimientosSgi)
                 .HasForeignKey(s => s.AccionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(s => s.Usuario)
+                .WithMany()
+                .HasForeignKey(s => s.UsuarioId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Actividad (1) -> (*) SeguimientoActividad
+        modelBuilder.Entity<SeguimientoActividad>(entity =>
+        {
+            entity.HasOne(s => s.Actividad)
+                .WithMany(a => a.Seguimientos)
+                .HasForeignKey(s => s.ActividadId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(s => s.Usuario)

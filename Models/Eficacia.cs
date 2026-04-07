@@ -12,9 +12,6 @@ namespace ActividadApp.Models
         public int AccionId { get; set; }
 
         [Required]
-        public int DiasParaVerificar { get; set; } = 90;
-
-        [Required]
         public DateTime Fecha { get; set; }
 
         [Required]

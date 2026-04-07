@@ -3,6 +3,7 @@ using System;
 using ActividadApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ActividadApp.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260406141534_AddSeguimientoActividadRelationship")]
+    partial class AddSeguimientoActividadRelationship
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -188,6 +191,9 @@ namespace ActividadApp.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<int>("DiasParaVerificar")
+                        .HasColumnType("int");
+
                     b.Property<bool>("Eficaz")
                         .HasColumnType("tinyint(1)");
 
@@ -333,9 +339,6 @@ namespace ActividadApp.Migrations
                     b.Property<string>("Comentario")
                         .IsRequired()
                         .HasColumnType("longtext");
-
-                    b.Property<int>("DiasParaVerificar")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime(6)");

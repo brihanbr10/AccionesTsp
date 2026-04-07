@@ -21,7 +21,8 @@ namespace ActividadApp.Models
         public string Agencia { get; set; }
 
         [Required]
-        public DateTime Fecha { get; set; }
+        public DateTime Fecha { get; set; } = DateTime.Now;
+
 
         // Seguimiento
         public bool Ejecutada { get; set; } = false;
@@ -32,6 +33,7 @@ namespace ActividadApp.Models
 
         // Relaciones
         public virtual Usuario Responsable { get; set; }
+        public virtual ICollection<SeguimientoActividad> Seguimientos { get; set; } = new List<SeguimientoActividad>();
 
     }
 }

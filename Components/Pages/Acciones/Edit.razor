@@ -288,7 +288,7 @@
                                                     <span>@act.Agencia</span>
                                                 </div>
                                                 <div class="col-md-2 mb-2">
-                                                    <strong class="d-block text-muted small">Fecha compromiso</strong>
+                                                    <strong class="d-block text-muted small">Fecha actividad</strong>
                                                     <span>@act.Fecha.ToString("dd/MM/yyyy")</span>
                                                 </div>
                                                 <div class="col-md-2 mb-2">
@@ -310,11 +310,62 @@
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6 mb-2">
-                                                    <label class="form-label text-muted small mb-0"><strong>Observaciones</strong></label>
-                                                    <textarea class="form-control form-control-sm" rows="2"
-                                                              @bind="actividades[index].Observaciones"
-                                                              disabled="@act.Ejecutada"
-                                                              placeholder="Observaciones del seguimiento..."></textarea>
+                                                    <label class="form-label text-muted small mb-0"><strong>Observaciones de Seguimiento</strong></label>
+                                                    <button type="button" class="btn btn-sm btn-link p-0 ms-2" @onclick="() => ToggleSeguimientosActividad(index)">
+                                                        <i class="bi @(actividadExpandidaIndex == index ? "bi-chevron-up" : "bi-chevron-down")"></i>
+                                                    </button>
+
+                                                    @if (actividadExpandidaIndex == index)
+                                                    {
+                                                        <div class="mt-2 border rounded p-2 bg-light">
+                                                            <!-- Histórico de observaciones -->
+                                                            @{
+                                                                var seguimientos = ObtenerSeguimientosActividad(act.Id);
+                                                                if (seguimientos.Any())
+                                                                {
+                                                                    <div class="mb-2">
+                                                                        <small class="d-block text-muted fw-bold mb-2">Histórico:</small>
+                                                                        <div style="max-height: 150px; overflow-y: auto;">
+                                                                            @foreach (var seg in seguimientos)
+                                                                            {
+                                                                                <div class="border-bottom pb-2 mb-2 small">
+                                                                                    <div class="text-muted small">
+                                                                                        <strong>@seg.Usuario?.Nombre</strong> - @seg.Fecha.ToString("dd/MM/yyyy HH:mm")
+                                                                                    </div>
+                                                                                    <div class="mt-1">@seg.Comentario</div>
+                                                                                </div>
+                                                                            }
+                                                                        </div>
+                                                                    </div>
+                                                                }
+                                                            }
+
+                                                            <!-- Agregar nueva observación -->
+                                                            @if (!act.Ejecutada)
+                                                            {
+                                                                <div class="mt-2 pt-2 border-top">
+                                                                    <textarea class="form-control form-control-sm" rows="2"
+                                                                              @bind="nuevosComentariosActividad[index]"
+                                                                              placeholder="Agregar nueva observación..."
+                                                                              disabled="@(isLoadingActividad.ContainsKey(index) && isLoadingActividad[index])"></textarea>
+                                                                    <button type="button" class="btn btn-sm btn-success mt-2" 
+                                                                            @onclick="() => AgregarSeguimientoActividad(act.Id, index)"
+                                                                            disabled="@(string.IsNullOrWhiteSpace(nuevosComentariosActividad.ContainsKey(index) ? nuevosComentariosActividad[index] : "") || (isLoadingActividad.ContainsKey(index) && isLoadingActividad[index]))">
+                                                                        @if (isLoadingActividad.ContainsKey(index) && isLoadingActividad[index])
+                                                                        {
+                                                                            <span class="spinner-border spinner-border-sm me-2"></span>
+                                                                            <span>Guardando...</span>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <i class="bi bi-plus-circle me-1"></i>
+                                                                            <span>Agregar</span>
+                                                                        }
+                                                                    </button>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    }
                                                 </div>
                                                 <div class="col-md-6 mb-2">
                                                     <label class="form-label text-muted small mb-0"><strong>Evidencia</strong></label>
@@ -478,44 +529,93 @@
                 @if (mostrarSeguimientoSgi)
                 {
                     <div class="card-body">
-                        <!-- Formulario nuevo seguimiento -->
-                        <div class="row mb-3">
-                            <div class="col-md-9">
-                                <textarea class="form-control form-control-sm" rows="2" @bind="nuevoComentarioSgi"
-                                          placeholder="Escriba un comentario de seguimiento..."></textarea>
-                            </div>
-                            <div class="col-md-3 d-flex align-items-end">
-                                <button type="button" class="btn btn-sm btn-dark w-100" @onclick="AgregarSeguimientoSgi"
-                                        disabled="@string.IsNullOrWhiteSpace(nuevoComentarioSgi)">
-                                    <i class="bi bi-plus-circle me-1"></i>Agregar
-                                </button>
+                        <!-- SUBSECCION: Configuración de Días para Verificar -->
+                        <div class="border-bottom pb-3 mb-4 p-3 bg-light rounded">
+                            <h6 class="mb-3"><i class="bi bi-hourglass-split me-2"></i>Configuración de Verificación</h6>
+                            <div class="row align-items-end">
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted small mb-1">
+                                        <strong>Días para verificar eficacia</strong>
+                                    </label>
+                                    <select class="form-select form-select-sm" @bind="diasParaVerificar" disabled="@isLoadingSgi">
+                                        <option value="20">20 días</option>
+                                        <option value="40">40 días</option>
+                                        <option value="60">60 días</option>
+                                        <option value="90">90 días</option>
+                                        <option value="120">120 días</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-8">
+                                    <small class="text-muted d-block">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        @if (seguimientosSgi.Any())
+                                        {
+                                            <span>Primer seguimiento estableció: <strong>@seguimientosSgi.First().DiasParaVerificar días</strong></span>
+                                        }
+                                        else
+                                        {
+                                            <span>Define cuántos días debe esperar antes de verificar la eficacia de la acción.</span>
+                                        }
+                                    </small>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Lista de seguimientos -->
-                        @if (seguimientosSgi.Any())
-                        {
-                            <div class="list-group">
-                                @foreach (var seg in seguimientosSgi.OrderByDescending(s => s.Fecha))
-                                {
-                                    <div class="list-group-item">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <p class="mb-1">@seg.Comentario</p>
-                                                <small class="text-muted">
-                                                    <i class="bi bi-person me-1"></i>@(seg.Usuario?.Nombre ?? username)
-                                                    <i class="bi bi-calendar ms-2 me-1"></i>@seg.Fecha.ToString("dd/MM/yyyy HH:mm")
-                                                </small>
+                        <!-- SUBSECCION: Agregar Nuevo Seguimiento -->
+                        <div class="border-bottom pb-4 mb-4">
+                            <h6 class="mb-3"><i class="bi bi-pencil-square me-2"></i>Agregar Nueva Observación</h6>
+                            <div class="row">
+                                <div class="col-md-9">
+                                    <label class="form-label text-muted small mb-1"><strong>Comentario</strong></label>
+                                    <textarea class="form-control form-control-sm" rows="2" @bind="nuevoComentarioSgi"
+                                              placeholder="Escriba un comentario de seguimiento..."
+                                              disabled="@isLoadingSgi"></textarea>
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <button type="button" class="btn btn-sm btn-dark w-100" @onclick="AgregarSeguimientoSgi"
+                                            disabled="@isLoadingSgi">
+                                        @if (isLoadingSgi)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2"></span>
+                                            <span>Guardando...</span>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-plus-circle me-1"></i>
+                                            <span>Agregar</span>
+                                        }
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SUBSECCION: Observaciones Registradas -->
+                        <div>
+                            <h6 class="mb-3"><i class="bi bi-clock-history me-2"></i>Observaciones Registradas</h6>
+                            @if (seguimientosSgi.Any())
+                            {
+                                <div class="list-group">
+                                    @foreach (var seg in seguimientosSgi.OrderByDescending(s => s.Fecha))
+                                    {
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div style="flex: 1;">
+                                                    <p class="mb-1">@seg.Comentario</p>
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-person me-1"></i>@(seg.Usuario?.Nombre ?? username)
+                                                        <i class="bi bi-calendar ms-2 me-1"></i>@seg.Fecha.ToString("dd/MM/yyyy HH:mm")
+                                                    </small>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <p class="text-muted fst-italic mb-0">Sin seguimientos registrados.</p>
-                        }
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted fst-italic mb-0"><i class="bi bi-inbox me-1"></i>Sin observaciones registradas aún.</p>
+                            }
+                        </div>
                     </div>
                 }
             </div>
@@ -625,16 +725,6 @@
             {
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Dias para verificar <span class="text-danger">*</span></label>
-                            <select class="form-select" @bind="eficacia.DiasParaVerificar">
-                                <option value="20">20 dias</option>
-                                <option value="40">40 dias</option>
-                                <option value="60">60 dias</option>
-                                <option value="90">90 dias</option>
-                                <option value="120">120 dias</option>
-                            </select>
-                        </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Comentarios <span class="text-danger">*</span></label>
                             <textarea class="form-control" @bind="eficacia.Comentarios" rows="3"></textarea>
@@ -738,6 +828,12 @@
     private bool esAdmin = false;
     private bool esInvestigador = false;
     private string nuevoComentarioSgi = string.Empty;
+    private int diasParaVerificar = 90;
+
+    private Dictionary<int, List<SeguimientoActividad>> seguimientosActividades = new();
+    private Dictionary<int, string> nuevosComentariosActividad = new();
+    private Dictionary<int, bool> isLoadingActividad = new();
+    private int? actividadExpandidaIndex = null;
 
     private bool tieneSolucionGuardada = false;
     private bool tieneConfirmacionGuardada = false;
@@ -750,6 +846,7 @@
     private string errorMessage = string.Empty;
     private string successMessage = string.Empty;
     private bool isLoading = false;
+    private bool isLoadingSgi = false;
     private bool isLoadingData = true;
 
     private string? username;
@@ -819,8 +916,23 @@
                 fechaInvestigacion = solucion.FechaInvestigacion;
                 fechaCompromiso = solucion.FechaCompromiso;
                 actividades = solucion.Actividades ?? new();
-                // Verificar si el usuario actual es el investigador
-                esInvestigador = userSession?.UserId == solucion.UsuarioInvestigaId;
+
+                // Cargar seguimientos de cada actividad
+                for (int i = 0; i < actividades.Count; i++)
+                {
+                    var act = actividades[i];
+                    nuevosComentariosActividad[i] = string.Empty;
+
+                    if (act.Id > 0)
+                    {
+                        var seguimientos = await DbContext.SeguimientosActividades
+                            .Where(s => s.ActividadId == act.Id)
+                            .Include(s => s.Usuario)
+                            .OrderByDescending(s => s.Fecha)
+                            .ToListAsync();
+                        seguimientosActividades[act.Id] = seguimientos;
+                    }
+                }
             }
 
             // Precargar confirmacion
@@ -846,7 +958,7 @@
 
     private void AgregarActividad()
     {
-        actividades.Add(new Actividad { Fecha = fechaCompromiso });
+        actividades.Add(new Actividad { Fecha = DateTime.UtcNow });
     }
 
     private void EliminarActividad(int index)
@@ -907,22 +1019,134 @@
 
     private async Task AgregarSeguimientoSgi()
     {
-        if (string.IsNullOrWhiteSpace(nuevoComentarioSgi) || accion == null || userSession == null) return;
-
-        var seguimiento = new SeguimientoSgi
+        if (string.IsNullOrWhiteSpace(nuevoComentarioSgi) || accion == null || userSession == null)
         {
-            AccionId = accion.Id,
-            UsuarioId = userSession.UserId,
-            Fecha = DateTime.UtcNow,
-            Comentario = nuevoComentarioSgi.Trim()
-        };
+            await JSRuntime.InvokeVoidAsync("alert", "El campo de comentario no puede estar vacío.");
+            return;
+        }
+        if (isLoadingSgi) return; // Protección contra doble clic
 
-        DbContext.SeguimientosSgi.Add(seguimiento);
-        await DbContext.SaveChangesAsync();
+        isLoadingSgi = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+        StateHasChanged();
 
-        seguimiento.Usuario = await DbContext.Users.FindAsync(userSession.UserId);
-        seguimientosSgi.Add(seguimiento);
-        nuevoComentarioSgi = string.Empty;
+        try
+         {
+             // Usar siempre los días seleccionados actualmente
+             var seguimiento = new SeguimientoSgi
+             {
+                 AccionId = accion.Id,
+                 UsuarioId = userSession.UserId,
+                 Fecha = DateTime.UtcNow,
+                 Comentario = nuevoComentarioSgi.Trim(),
+                 DiasParaVerificar = diasParaVerificar
+             };
+
+             DbContext.SeguimientosSgi.Add(seguimiento);
+             await DbContext.SaveChangesAsync();
+
+            nuevoComentarioSgi = string.Empty;
+            errorMessage = string.Empty;
+            successMessage = "Observación agregada correctamente.";
+
+            // Recargar seguimientos desde la base de datos para sincronizar
+            seguimientosSgi = await DbContext.SeguimientosSgi
+                .Where(s => s.AccionId == accion.Id)
+                .Include(s => s.Usuario)
+                .OrderByDescending(s => s.Fecha)
+                .ToListAsync();
+
+            StateHasChanged();
+
+            // Limpiar mensaje después de 3 segundos
+            await Task.Delay(3000);
+            successMessage = string.Empty;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al agregar observación: {ex.Message}";
+            StateHasChanged();
+        }
+        finally
+        {
+            isLoadingSgi = false;
+        }
+    }
+
+    private async Task AgregarSeguimientoActividad(int actividadId, int actividadIndex)
+    {
+        if (!nuevosComentariosActividad.ContainsKey(actividadIndex) || 
+            string.IsNullOrWhiteSpace(nuevosComentariosActividad[actividadIndex]) || 
+            userSession == null)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "El campo de observación no puede estar vacío.");
+            return;
+        }
+        if (isLoadingActividad.ContainsKey(actividadIndex) && isLoadingActividad[actividadIndex]) return; // Protección contra doble clic
+
+        if (!isLoadingActividad.ContainsKey(actividadIndex))
+        {
+            isLoadingActividad[actividadIndex] = false;
+        }
+
+        isLoadingActividad[actividadIndex] = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+        StateHasChanged();
+
+        try
+        {
+            var seguimiento = new SeguimientoActividad
+            {
+                ActividadId = actividadId,
+                UsuarioId = userSession.UserId,
+                Fecha = DateTime.UtcNow,
+                Comentario = nuevosComentariosActividad[actividadIndex].Trim()
+            };
+
+            DbContext.SeguimientosActividades.Add(seguimiento);
+            await DbContext.SaveChangesAsync();
+
+            nuevosComentariosActividad[actividadIndex] = string.Empty;
+            errorMessage = string.Empty;
+            successMessage = "Observación agregada correctamente.";
+
+            // Recargar seguimientos desde la base de datos para sincronizar
+            var seguimientos = await DbContext.SeguimientosActividades
+                .Where(s => s.ActividadId == actividadId)
+                .Include(s => s.Usuario)
+                .OrderByDescending(s => s.Fecha)
+                .ToListAsync();
+            seguimientosActividades[actividadId] = seguimientos;
+
+            StateHasChanged();
+
+            // Limpiar mensaje después de 3 segundos
+            await Task.Delay(3000);
+            successMessage = string.Empty;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al agregar observación: {ex.Message}";
+            StateHasChanged();
+        }
+        finally
+        {
+            isLoadingActividad[actividadIndex] = false;
+        }
+    }
+
+    private void ToggleSeguimientosActividad(int index)
+    {
+        actividadExpandidaIndex = actividadExpandidaIndex == index ? null : index;
+    }
+
+    private List<SeguimientoActividad> ObtenerSeguimientosActividad(int actividadId)
+    {
+        return seguimientosActividades.ContainsKey(actividadId) ? seguimientosActividades[actividadId] : new();
     }
 
     private int? uploadingIndex = null;
@@ -1127,7 +1351,12 @@
                         consecutivo, proceso.Descripcion, accion.Descripcion, eficacia.Eficaz);
                 }
 
-                Navigation.NavigateTo("/acciones");
+                successMessage = "Cambios guardados correctamente. Puedes continuar editando.";
+
+                // Limpiar mensaje después de 3 segundos
+                await Task.Delay(3000);
+                successMessage = string.Empty;
+                StateHasChanged();
             }
             else
             {

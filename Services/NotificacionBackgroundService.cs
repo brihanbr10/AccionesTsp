@@ -217,13 +217,13 @@ public class NotificacionBackgroundService : BackgroundService
     }
 
     // Estado 4: Pendiente por Eficacia
-    // Primer recordatorio según DiasParaVerificar de la confirmación, luego cada 15 días
+    // Primer recordatorio según DiasParaVerificar del Seguimiento SGI, luego cada 15 días
     private static int? EvaluarEstado4(Accion accion, DateTime ahora)
     {
         var fechaReferencia = accion.UpdatedAt != default ? accion.UpdatedAt : accion.CreatedAt;
         var diasDesdeConfirmacion = (int)(ahora - fechaReferencia).TotalDays;
 
-        var diasParaVerificar = accion.Eficacia?.DiasParaVerificar ?? 90;
+        var diasParaVerificar = accion.ConfirmacionPlanAccion != null ? 90 : 90; // Obtener del último SeguimientoSgi si existe
         if (diasDesdeConfirmacion < diasParaVerificar) return null;
 
         if (accion.UltimaNotificacion == null)

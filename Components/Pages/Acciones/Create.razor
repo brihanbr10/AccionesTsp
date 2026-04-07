@@ -482,7 +482,10 @@
                     }
                 }
 
-                Navigation.NavigateTo("/acciones");
+                // Redirigir a Edit para continuar agregando pasos (soluciones, confirmaciones, etc.)
+                successMessage = $"Acción creada correctamente. Puedes continuar agregando los pasos siguientes.";
+                await Task.Delay(1500);
+                Navigation.NavigateTo($"/acciones/edit/{accion.Id}");
             }
             else
             {
