@@ -1,0 +1,98 @@
+@if (isVisible)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header @(isSuccess ? "bg-success" : "bg-danger") text-white">
+                    <div class="d-flex align-items-center gap-2" style="flex: 1;">
+                        @if (isSuccess)
+                        {
+                            <i class="bi bi-check-circle-fill" style="font-size: 1.5rem;"></i>
+                        }
+                        else
+                        {
+                            <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.5rem;"></i>
+                        }
+                        <h5 class="modal-title mb-0">@title</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" @onclick="Close" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">@message</p>
+                    @if (!string.IsNullOrEmpty(details))
+                    {
+                        <div class="alert @(isSuccess ? "alert-success" : "alert-danger") mb-0">
+                            <small>@details</small>
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    @if (isSuccess && !string.IsNullOrEmpty(redirectUrl))
+                    {
+                        <button type="button" class="btn btn-success" @onclick="HandleConfirm">
+                            <i class="bi bi-check-circle me-1"></i>Aceptar
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn @(isSuccess ? "btn-success" : "btn-danger")" @onclick="Close">
+                            <i class="bi @(isSuccess ? "bi-check-circle" : "bi-x-circle") me-1"></i>@(isSuccess ? "Aceptar" : "Cerrar")
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool isVisible = false;
+    private bool isSuccess = true;
+    private string title = string.Empty;
+    private string message = string.Empty;
+    private string? details;
+    private string? redirectUrl;
+
+    [Inject]
+    private NavigationManager? Navigation { get; set; }
+
+    public async Task ShowSuccess(string successTitle, string successMessage, string? successDetails = null, string? redirect = null)
+    {
+        isSuccess = true;
+        title = successTitle;
+        message = successMessage;
+        details = successDetails;
+        redirectUrl = redirect;
+        isVisible = true;
+        StateHasChanged();
+    }
+
+    public async Task ShowError(string errorTitle, string errorMessage, string? errorDetails = null)
+    {
+        isSuccess = false;
+        title = errorTitle;
+        message = errorMessage;
+        details = errorDetails;
+        redirectUrl = null;
+        isVisible = true;
+        StateHasChanged();
+    }
+
+    private async Task Close()
+    {
+        isVisible = false;
+        StateHasChanged();
+    }
+
+    private async Task HandleConfirm()
+    {
+        isVisible = false;
+        StateHasChanged();
+
+        if (!string.IsNullOrEmpty(redirectUrl) && Navigation != null)
+        {
+            await Task.Delay(100);
+            Navigation.NavigateTo(redirectUrl);
+        }
+    }
+}

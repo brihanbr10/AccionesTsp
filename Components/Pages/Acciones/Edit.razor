@@ -43,19 +43,7 @@
     }
     else
     {
-        @if (!string.IsNullOrEmpty(errorMessage))
-        {
-            <div class="alert alert-danger" role="alert">
-                <i class="bi bi-exclamation-circle me-2"></i>@errorMessage
-            </div>
-        }
-
-        @if (!string.IsNullOrEmpty(successMessage))
-        {
-            <div class="alert alert-success" role="alert">
-                <i class="bi bi-check-circle me-2"></i>@successMessage
-            </div>
-        }
+        <ResultModal @ref="resultModal" />
 
         <!-- SECCION 1: Información General (Solo lectura) -->
         <div class="card shadow-sm mb-4">
@@ -520,7 +508,7 @@
         {
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                    <span><i class="bi bi-journal-text me-2"></i>Seguimiento SGI</span>
+                    <span><i class="bi bi-journal-text me-2"></i>Seguimiento de la mejora</span>
                     <div class="form-check form-switch mb-0">
                         <input class="form-check-input" type="checkbox" @bind="mostrarSeguimientoSgi" />
                         <label class="form-check-label text-white">Mostrar</label>
@@ -529,38 +517,6 @@
                 @if (mostrarSeguimientoSgi)
                 {
                     <div class="card-body">
-                        <!-- SUBSECCION: Configuración de Días para Verificar -->
-                        <div class="border-bottom pb-3 mb-4 p-3 bg-light rounded">
-                            <h6 class="mb-3"><i class="bi bi-hourglass-split me-2"></i>Configuración de Verificación</h6>
-                            <div class="row align-items-end">
-                                <div class="col-md-4">
-                                    <label class="form-label text-muted small mb-1">
-                                        <strong>Días para verificar eficacia</strong>
-                                    </label>
-                                    <select class="form-select form-select-sm" @bind="diasParaVerificar" disabled="@isLoadingSgi">
-                                        <option value="20">20 días</option>
-                                        <option value="40">40 días</option>
-                                        <option value="60">60 días</option>
-                                        <option value="90">90 días</option>
-                                        <option value="120">120 días</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-8">
-                                    <small class="text-muted d-block">
-                                        <i class="bi bi-info-circle me-1"></i>
-                                        @if (seguimientosSgi.Any())
-                                        {
-                                            <span>Primer seguimiento estableció: <strong>@seguimientosSgi.First().DiasParaVerificar días</strong></span>
-                                        }
-                                        else
-                                        {
-                                            <span>Define cuántos días debe esperar antes de verificar la eficacia de la acción.</span>
-                                        }
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- SUBSECCION: Agregar Nuevo Seguimiento -->
                         <div class="border-bottom pb-4 mb-4">
                             <h6 class="mb-3"><i class="bi bi-pencil-square me-2"></i>Agregar Nueva Observación</h6>
@@ -673,6 +629,10 @@
                                     }
                                 </div>
                             </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Días para verificar eficacia</label>
+                                <input type="text" class="form-control" value="@confirmacion.DiasParaVerificar días" readonly />
+                            </div>
                         </div>
                     }
                     else
@@ -702,6 +662,19 @@
                                     <input class="form-check-input" type="checkbox" @bind="confirmacion.CumplioPlan" />
                                     <label class="form-check-label">@(confirmacion.CumplioPlan ? "Si" : "No")</label>
                                 </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Días para verificar eficacia <span class="text-danger">*</span></label>
+                                <select class="form-select" @bind="confirmacion.DiasParaVerificar">
+                                    <option value="20">20 días</option>
+                                    <option value="40">40 días</option>
+                                    <option value="60">60 días</option>
+                                    <option value="90">90 días</option>
+                                    <option value="120">120 días</option>
+                                </select>
+                                <small class="text-muted d-block mt-1">
+                                    <i class="bi bi-info-circle me-1"></i>Tiempo para verificar la eficacia de la acción
+                                </small>
                             </div>
                         </div>
                     }
@@ -787,7 +760,14 @@
                 </div>
                 <div class="modal-body">
                     <p>¿Está seguro de finalizar esta tarea?</p>
-                    <p class="text-muted small mb-0">Esta acción no se puede deshacer.</p>
+                    <p class="text-muted small mb-3">Esta acción no se puede deshacer.</p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Comentario de ejecución <span class="text-danger">*</span></label>
+                        <textarea class="form-control" rows="3" @bind="comentarioEjecucion" 
+                                  placeholder="Describa cómo se ejecutó la actividad..."></textarea>
+                        <small class="text-muted">Este comentario es obligatorio para documentar la ejecución.</small>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @onclick="CancelarConfirmacionEjecutada">Cancelar</button>
@@ -804,8 +784,10 @@
     [Parameter]
     public int Id { get; set; }
 
+    private ResultModal? resultModal;
     private bool showConfirmEjecutada = false;
     private int? actividadIndexConfirm = null;
+    private string comentarioEjecucion = string.Empty;
 
     private UserSession? userSession;
     private Accion? accion;
@@ -828,7 +810,6 @@
     private bool esAdmin = false;
     private bool esInvestigador = false;
     private string nuevoComentarioSgi = string.Empty;
-    private int diasParaVerificar = 90;
 
     private Dictionary<int, List<SeguimientoActividad>> seguimientosActividades = new();
     private Dictionary<int, string> nuevosComentariosActividad = new();
@@ -990,31 +971,76 @@
     {
         if (actividades[index].Ejecutada) return;
         actividadIndexConfirm = index;
+        comentarioEjecucion = string.Empty; // Limpiar comentario
         showConfirmEjecutada = true;
     }
 
-    private void ConfirmarEjecutada()
+    private async Task ConfirmarEjecutada()
     {
-        if (actividadIndexConfirm.HasValue)
+        if (!actividadIndexConfirm.HasValue) return;
+
+        // Validar que el comentario no esté vacío
+        if (string.IsNullOrWhiteSpace(comentarioEjecucion))
         {
-            var act = actividades[actividadIndexConfirm.Value];
-            if (act.FechaEjecucion == null)
-            {
-                errorMessage = "Debe indicar la fecha de ejecucion antes de finalizar la tarea.";
-                showConfirmEjecutada = false;
-                actividadIndexConfirm = null;
-                return;
-            }
-            act.Ejecutada = true;
+            await JSRuntime.InvokeVoidAsync("alert", "Debe ingresar un comentario para documentar la ejecución de la actividad.");
+            return;
         }
-        showConfirmEjecutada = false;
-        actividadIndexConfirm = null;
+
+        var act = actividades[actividadIndexConfirm.Value];
+        if (act.FechaEjecucion == null)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Debe indicar la fecha de ejecución antes de finalizar la tarea.");
+            return;
+        }
+
+        try
+        {
+            // Marcar actividad como ejecutada
+            act.Ejecutada = true;
+
+            // Crear seguimiento de actividad con el comentario
+            var seguimiento = new SeguimientoActividad
+            {
+                ActividadId = act.Id,
+                UsuarioId = userSession.UserId,
+                Fecha = DateTime.UtcNow,
+                Comentario = comentarioEjecucion.Trim()
+            };
+
+            DbContext.SeguimientosActividades.Add(seguimiento);
+            await DbContext.SaveChangesAsync();
+
+            // Recargar seguimientos para mostrar el nuevo comentario
+            var seguimientos = await DbContext.SeguimientosActividades
+                .Where(s => s.ActividadId == act.Id)
+                .Include(s => s.Usuario)
+                .OrderByDescending(s => s.Fecha)
+                .ToListAsync();
+            seguimientosActividades[act.Id] = seguimientos;
+
+            successMessage = "Actividad finalizada correctamente con comentario registrado.";
+            await Task.Delay(3000);
+            successMessage = string.Empty;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al finalizar la actividad: {ex.Message}";
+            StateHasChanged();
+        }
+        finally
+        {
+            showConfirmEjecutada = false;
+            actividadIndexConfirm = null;
+            comentarioEjecucion = string.Empty;
+        }
     }
 
     private void CancelarConfirmacionEjecutada()
     {
         showConfirmEjecutada = false;
         actividadIndexConfirm = null;
+        comentarioEjecucion = string.Empty;
     }
 
     private async Task AgregarSeguimientoSgi()
@@ -1039,8 +1065,7 @@
                  AccionId = accion.Id,
                  UsuarioId = userSession.UserId,
                  Fecha = DateTime.UtcNow,
-                 Comentario = nuevoComentarioSgi.Trim(),
-                 DiasParaVerificar = diasParaVerificar
+                 Comentario = nuevoComentarioSgi.Trim()
              };
 
              DbContext.SeguimientosSgi.Add(seguimiento);
@@ -1116,6 +1141,7 @@
             // Recargar seguimientos desde la base de datos para sincronizar
             var seguimientos = await DbContext.SeguimientosActividades
                 .Where(s => s.ActividadId == actividadId)
+                // No incluir en el seguimiento el dato del usuario
                 .Include(s => s.Usuario)
                 .OrderByDescending(s => s.Fecha)
                 .ToListAsync();
@@ -1230,14 +1256,14 @@
                     string.IsNullOrWhiteSpace(solucion.CorreccionPropuesta) ||
                     solucion.UsuarioInvestigaId == 0 || solucion.UsuarioCoordinaId == 0)
                 {
-                    errorMessage = "Todos los campos de la solucion son requeridos.";
+                    await resultModal.ShowError("Validación", "Todos los campos de la solución son requeridos.");
                     isLoading = false;
                     return;
                 }
 
                 if (actividades.Any(a => string.IsNullOrWhiteSpace(a.Descripcion) || a.ResponsableId == 0))
                 {
-                    errorMessage = "Cada actividad debe tener descripcion y responsable.";
+                    await resultModal.ShowError("Validación", "Cada actividad debe tener descripción y responsable.");
                     isLoading = false;
                     return;
                 }
@@ -1248,7 +1274,7 @@
                 var sinFecha = actividades.Where(a => a.Ejecutada && a.FechaEjecucion == null).ToList();
                 if (sinFecha.Any())
                 {
-                    errorMessage = "Las actividades ejecutadas deben tener fecha de ejecucion.";
+                    await resultModal.ShowError("Validación", "Las actividades ejecutadas deben tener fecha de ejecución.");
                     isLoading = false;
                     return;
                 }
@@ -1265,9 +1291,10 @@
             if (incluirSolucion && incluirConfirmacion && !tieneConfirmacionGuardada)
             {
                 if (string.IsNullOrWhiteSpace(confirmacion.DetallesCumplimiento) ||
-                    confirmacion.ResponsableId == 0)
+                    confirmacion.ResponsableId == 0 ||
+                    confirmacion.DiasParaVerificar <= 0)
                 {
-                    errorMessage = "Todos los campos de la confirmacion son requeridos.";
+                    await resultModal.ShowError("Validación", "Todos los campos de la confirmación son requeridos.");
                     isLoading = false;
                     return;
                 }
@@ -1284,7 +1311,7 @@
                 if (string.IsNullOrWhiteSpace(eficacia.Comentarios) ||
                     eficacia.ResponsableId == 0)
                 {
-                    errorMessage = "Todos los campos de eficacia son requeridos.";
+                    await resultModal.ShowError("Validación", "Todos los campos de eficacia son requeridos.");
                     isLoading = false;
                     return;
                 }
@@ -1299,7 +1326,7 @@
 
             if (success)
             {
-                var consecutivo = $"ACC-{accion.Id:D4}";
+                var consecutivo = $"{accion.Id:D4}";
                 var proceso = procesos.FirstOrDefault(p => p.Id == accion.ProcesoId);
                 var nuevoEstado = accion.EstadoId;
 
@@ -1351,16 +1378,15 @@
                         consecutivo, proceso.Descripcion, accion.Descripcion, eficacia.Eficaz);
                 }
 
-                successMessage = "Cambios guardados correctamente. Puedes continuar editando.";
-
-                // Limpiar mensaje después de 3 segundos
-                await Task.Delay(3000);
-                successMessage = string.Empty;
-                StateHasChanged();
+                await resultModal.ShowSuccess(
+                    "Acción Actualizada",
+                    "Los cambios han sido guardados correctamente.",
+                    $"ID: {consecutivo}"
+                );
             }
             else
             {
-                errorMessage = "Error al actualizar la accion. Por favor, intenta nuevamente.";
+                await resultModal.ShowError("Error", "Error al actualizar la acción. Por favor, intenta nuevamente.");
             }
         }
         catch (Exception ex) when (ex.GetType().Name == "NavigationException")
@@ -1370,11 +1396,12 @@
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error inesperado. Por favor, intenta de nuevo. ({ex.Message})";
+            await resultModal.ShowError("Error Inesperado", "Ocurrió un error inesperado.", ex.Message);
         }
         finally
         {
             isLoading = false;
+            StateHasChanged();
         }
     }
 

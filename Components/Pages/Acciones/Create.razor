@@ -24,19 +24,7 @@
         </a>
     </div>
 
-    @if (!string.IsNullOrEmpty(errorMessage))
-    {
-        <div class="alert alert-danger" role="alert">
-            <i class="bi bi-exclamation-circle me-2"></i>@errorMessage
-        </div>
-    }
-
-    @if (!string.IsNullOrEmpty(successMessage))
-    {
-        <div class="alert alert-success" role="alert">
-            <i class="bi bi-check-circle me-2"></i>@successMessage
-        </div>
-    }
+    <ResultModal @ref="resultModal" />
 
     <!-- SECCION 1: Información General -->
     <div class="card shadow-sm mb-4">
@@ -259,6 +247,62 @@
         }
     </div>
 
+    <!-- SECCION 3: Confirmación -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-clipboard-check me-2"></i>3. Confirmación del Plan de Acción</span>
+            <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" @bind="incluirConfirmacion" />
+                <label class="form-check-label">Incluir</label>
+            </div>
+        </div>
+        @if (incluirConfirmacion)
+        {
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Detalles de Cumplimiento <span class="text-danger">*</span></label>
+                        <textarea class="form-control" @bind="confirmacion.DetallesCumplimiento" rows="3"></textarea>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Fecha <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" @bind="fechaConfirmacion" min="@fechaCompromiso.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Responsable <span class="text-danger">*</span></label>
+                        <select class="form-select" @bind="confirmacion.ResponsableId">
+                            <option value="0">Seleccionar...</option>
+                            @foreach (var u in usuarios)
+                            {
+                                <option value="@u.Id">@u.Nombre</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Cumplió el Plan</label>
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" @bind="confirmacion.CumplioPlan" />
+                            <label class="form-check-label">@(confirmacion.CumplioPlan ? "Si" : "No")</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Días para verificar eficacia <span class="text-danger">*</span></label>
+                        <select class="form-select" @bind="confirmacion.DiasParaVerificar">
+                            <option value="20">20 días</option>
+                            <option value="40">40 días</option>
+                            <option value="60">60 días</option>
+                            <option value="90">90 días</option>
+                            <option value="120">120 días</option>
+                        </select>
+                        <small class="text-muted d-block mt-1">
+                            <i class="bi bi-info-circle me-1"></i>Tiempo para verificar la eficacia de la acción
+                        </small>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
     <!-- Boton Guardar -->
     <div class="d-flex gap-2 mb-5">
         <button type="button" class="btn btn-primary btn-lg" @onclick="HandleSubmit" disabled="@isLoading">
@@ -278,16 +322,20 @@
 </div>
 
 @code {
+    private ResultModal? resultModal;
     private UserSession userSession;
     private Accion accion = new();
     private Solucion solucion = new();
+    private ConfirmacionPlanAccion confirmacion = new();
     private List<Actividad> actividades = new();
 
     private DateTime fecha = DateTime.UtcNow;
     private DateTime fechaInvestigacion = DateTime.UtcNow;
     private DateTime fechaCompromiso = DateTime.UtcNow;
+    private DateTime fechaConfirmacion = DateTime.UtcNow;
 
     private bool incluirSolucion = false;
+    private bool incluirConfirmacion = false;
 
     private string errorMessage = string.Empty;
     private string successMessage = string.Empty;
@@ -381,19 +429,20 @@
         errorMessage = string.Empty;
         successMessage = string.Empty;
         isLoading = true;
+        StateHasChanged();
 
         try
         {
             if (userSession == null)
             {
-                errorMessage = "Sesion no valida.";
+                await resultModal.ShowError("Error de Sesión", "Sesión no válida.");
                 isLoading = false;
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(accion.Descripcion))
             {
-                errorMessage = "La descripcion es requerida.";
+                await resultModal.ShowError("Validación", "La descripción es requerida.");
                 isLoading = false;
                 return;
             }
@@ -402,7 +451,7 @@
                 accion.SistemaGestionId == 0 || accion.OrganizacionId == 0 || accion.SitioId == 0 ||
                 accion.ResponsableId == 0)
             {
-                errorMessage = "Todos los campos de clasificacion son requeridos.";
+                await resultModal.ShowError("Validación", "Todos los campos de clasificación son requeridos.");
                 isLoading = false;
                 return;
             }
@@ -416,28 +465,28 @@
                     string.IsNullOrWhiteSpace(solucion.CorreccionPropuesta) ||
                     solucion.UsuarioInvestigaId == 0 || solucion.UsuarioCoordinaId == 0)
                 {
-                    errorMessage = "Todos los campos de la solucion son requeridos.";
+                    await resultModal.ShowError("Validación", "Todos los campos de la solución son requeridos.");
                     isLoading = false;
                     return;
                 }
 
                 if (actividades.Any(a => string.IsNullOrWhiteSpace(a.Descripcion) || a.ResponsableId == 0))
                 {
-                    errorMessage = "Cada actividad debe tener descripcion y responsable.";
+                    await resultModal.ShowError("Validación", "Cada actividad debe tener descripción y responsable.");
                     isLoading = false;
                     return;
                 }
 
                 if (fechaCompromiso.Date < fechaInvestigacion.Date)
                 {
-                    errorMessage = "La fecha de compromiso no puede ser menor a la fecha de investigacion.";
+                    await resultModal.ShowError("Validación de Fechas", "La fecha de compromiso no puede ser menor a la fecha de investigación.");
                     isLoading = false;
                     return;
                 }
 
                 if (actividades.Any(a => a.Fecha.Date < fechaInvestigacion.Date || a.Fecha.Date > fechaCompromiso.Date))
                 {
-                    errorMessage = "La fecha de las actividades debe estar entre la fecha de investigacion y la fecha de compromiso.";
+                    await resultModal.ShowError("Validación de Fechas", "La fecha de las actividades debe estar entre la fecha de investigación y la fecha de compromiso.");
                     isLoading = false;
                     return;
                 }
@@ -446,6 +495,24 @@
                 solucion.FechaCompromiso = fechaCompromiso;
                 solucion.Actividades = actividades;
                 accion.Solucion = solucion;
+            }
+
+            if (incluirSolucion && incluirConfirmacion)
+            {
+                if (string.IsNullOrWhiteSpace(confirmacion.DetallesCumplimiento) ||
+                    confirmacion.ResponsableId == 0 ||
+                    confirmacion.DiasParaVerificar <= 0)
+                {
+                    await resultModal.ShowError("Validación", "Todos los campos de la confirmación son requeridos.");
+                    isLoading = false;
+                    return;
+                }
+            }
+
+            if (incluirSolucion && incluirConfirmacion)
+            {
+                confirmacion.Fecha = fechaConfirmacion;
+                accion.ConfirmacionPlanAccion = confirmacion;
             }
 
             accion.EstadoId = AccionService.CalcularEstadoId(accion);
@@ -482,14 +549,17 @@
                     }
                 }
 
-                // Redirigir a Edit para continuar agregando pasos (soluciones, confirmaciones, etc.)
-                successMessage = $"Acción creada correctamente. Puedes continuar agregando los pasos siguientes.";
-                await Task.Delay(1500);
-                Navigation.NavigateTo($"/acciones/edit/{accion.Id}");
+                // Mostrar modal de éxito y redirigir
+                await resultModal.ShowSuccess(
+                    "Acción Creada",
+                    "La acción ha sido creada correctamente.",
+                    $"ID: {consecutivo}",
+                    $"/acciones/edit/{accion.Id}"
+                );
             }
             else
             {
-                errorMessage = "Error al crear la accion. Por favor, intenta nuevamente.";
+                await resultModal.ShowError("Error", "Error al crear la acción. Por favor, intenta nuevamente.");
             }
         }
         catch (Exception ex) when (ex is NavigationException)
@@ -499,11 +569,12 @@
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error inesperado. Por favor, intenta de nuevo. ({ex.Message})";
+            await resultModal.ShowError("Error Inesperado", "Ocurrió un error inesperado.", ex.Message);
         }
         finally
         {
             isLoading = false;
+            StateHasChanged();
         }
     }
 
@@ -517,16 +588,20 @@
         }
     }
 
-    private async Task ValidarFechaActividad(int index)
+    private void ValidarFechaActividad(int index)
     {
         if (index >= 0 && index < actividades.Count)
         {
-            var act = actividades[index];
-            if (act.Fecha.Date < fechaInvestigacion.Date || act.Fecha.Date > fechaCompromiso.Date)
+            var actividad = actividades[index];
+            if (actividad.Fecha.Date < fechaInvestigacion.Date)
             {
-                await JSRuntime.InvokeVoidAsync("alert", "La fecha de la actividad debe estar entre la fecha de investigacion y la fecha de compromiso.");
-                act.Fecha = fechaCompromiso;
-                StateHasChanged();
+                actividad.Fecha = fechaInvestigacion;
+                _ = JSRuntime.InvokeVoidAsync("alert", $"La fecha de la actividad debe ser igual o posterior a la fecha de investigacion.");
+            }
+            else if (actividad.Fecha.Date > fechaCompromiso.Date)
+            {
+                actividad.Fecha = DateTime.SpecifyKind(fechaCompromiso, DateTimeKind.Utc);
+                _ = JSRuntime.InvokeVoidAsync("alert", $"La fecha de la actividad debe ser igual o anterior a la fecha de compromiso.");
             }
         }
     }

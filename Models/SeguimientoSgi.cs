@@ -20,9 +20,6 @@ public class SeguimientoSgi
     [Required]
     public string Comentario { get; set; } = string.Empty;
 
-    [Required]
-    public int DiasParaVerificar { get; set; } = 90;
-
     // Relaciones
     public virtual Usuario Usuario { get; set; }
 }

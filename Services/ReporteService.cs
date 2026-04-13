@@ -61,16 +61,13 @@ public class ReporteService
         using var workbook = new XLWorkbook();
         var ws = workbook.Worksheets.Add("Reporte General");
 
-        // Encabezados
+        // Encabezados según orden especificado
         var headers = new[]
         {
-            "Consecutivo", "Fecha", "Tipo Accion", "Proceso", "Responsable Proceso",
-            "Descripcion", "Reporta", "Origen", "Entidad", "Sistema Gestion",
-            "Organizacion", "Sitio", "Estado",
-            "Correccion Propuesta", "Analisis Causa", "Investigador", "Fecha Investigacion",
-            "Coordinador", "Fecha Compromiso",
-            "Confirmacion", "Fecha Confirmacion", "Cumplio Plan",
-            "Comentarios Eficacia", "Fecha Eficacia", "Eficaz"
+            "Consecutivo", "Fecha Detección", "Tipo Accion", "Estado", "Proceso", 
+            "Responsable Proceso", "Origen", "Centro de Trabajo", "Descripcion",
+            "Correccion Propuesta", "Analisis Causa", "Fecha Compromiso",
+            "Investigador", "Entidad", "Sistema Gestion", "Organizacion", "Reporta"
         };
 
         for (int c = 0; c < headers.Length; c++)
@@ -86,34 +83,20 @@ public class ReporteService
             ws.Cell(fila, col++).Value = $"ACC-{a.Id:D4}";
             ws.Cell(fila, col++).Value = a.Fecha.ToString("dd/MM/yyyy");
             ws.Cell(fila, col++).Value = TipoAccionTexto(a.TipoAccionId);
+            ws.Cell(fila, col++).Value = a.Estado?.Descripcion ?? "-";
             ws.Cell(fila, col++).Value = a.Proceso?.Descripcion ?? "-";
             ws.Cell(fila, col++).Value = a.Proceso?.Responsable?.Nombre ?? "-";
-            ws.Cell(fila, col++).Value = a.Descripcion;
-            ws.Cell(fila, col++).Value = a.Usuario?.Nombre ?? "-";
             ws.Cell(fila, col++).Value = maestros.GetValueOrDefault(a.OrigenId, "-");
+            ws.Cell(fila, col++).Value = maestros.GetValueOrDefault(a.SitioId, "-");
+            ws.Cell(fila, col++).Value = a.Descripcion;
+            ws.Cell(fila, col++).Value = a.Solucion?.CorreccionPropuesta ?? "";
+            ws.Cell(fila, col++).Value = a.Solucion?.AnalisisCausa ?? "";
+            ws.Cell(fila, col++).Value = a.Solucion?.FechaCompromiso.ToString("dd/MM/yyyy") ?? "";
+            ws.Cell(fila, col++).Value = a.Solucion?.UsuarioInvestiga?.Nombre ?? "";
             ws.Cell(fila, col++).Value = maestros.GetValueOrDefault(a.EntidadId, "-");
             ws.Cell(fila, col++).Value = maestros.GetValueOrDefault(a.SistemaGestionId, "-");
             ws.Cell(fila, col++).Value = maestros.GetValueOrDefault(a.OrganizacionId, "-");
-            ws.Cell(fila, col++).Value = maestros.GetValueOrDefault(a.SitioId, "-");
-            ws.Cell(fila, col++).Value = a.Estado?.Descripcion ?? "-";
-
-            // Solucion
-            ws.Cell(fila, col++).Value = a.Solucion?.CorreccionPropuesta ?? "";
-            ws.Cell(fila, col++).Value = a.Solucion?.AnalisisCausa ?? "";
-            ws.Cell(fila, col++).Value = a.Solucion?.UsuarioInvestiga?.Nombre ?? "";
-            ws.Cell(fila, col++).Value = a.Solucion?.FechaInvestigacion.ToString("dd/MM/yyyy") ?? "";
-            ws.Cell(fila, col++).Value = a.Solucion?.UsuarioCoordina?.Nombre ?? "";
-            ws.Cell(fila, col++).Value = a.Solucion?.FechaCompromiso.ToString("dd/MM/yyyy") ?? "";
-
-            // Confirmacion
-            ws.Cell(fila, col++).Value = a.ConfirmacionPlanAccion?.DetallesCumplimiento ?? "";
-            ws.Cell(fila, col++).Value = a.ConfirmacionPlanAccion?.Fecha.ToString("dd/MM/yyyy") ?? "";
-            ws.Cell(fila, col++).Value = a.ConfirmacionPlanAccion != null ? (a.ConfirmacionPlanAccion.CumplioPlan ? "Si" : "No") : "";
-
-            // Eficacia
-            ws.Cell(fila, col++).Value = a.Eficacia?.Comentarios ?? "";
-            ws.Cell(fila, col++).Value = a.Eficacia?.Fecha.ToString("dd/MM/yyyy") ?? "";
-            ws.Cell(fila, col++).Value = a.Eficacia != null ? (a.Eficacia.Eficaz ? "Eficaz" : "No Eficaz") : "";
+            ws.Cell(fila, col++).Value = a.Usuario?.Nombre ?? "-";
 
             fila++;
         }
@@ -135,15 +118,14 @@ public class ReporteService
 
         var headers = new[]
         {
-            "Consecutivo", "Fecha", "Tipo Accion", "Proceso", "Responsable Proceso",
-            "Descripcion", "Reporta", "Origen", "Entidad", "Sistema Gestion",
-            "Organizacion", "Sitio", "Estado",
-            "Correccion Propuesta", "Analisis Causa", "Investigador", "Fecha Investigacion",
-            "Coordinador", "Fecha Compromiso",
-            "Actividad", "Agencia", "Responsable Actividad", "Fecha Actividad",
-            "Ejecutada", "Fecha Ejecucion", "Observaciones",
+            "Consecutivo", "Fecha Detección", "Tipo Accion", "Estado", "Proceso", 
+            "Responsable Proceso", "Origen", "Centro de Trabajo", "Descripcion",
+            "Correccion Propuesta", "Analisis Causa", "Fecha Compromiso",
+            "Actividad", "Fecha para Actividad", "Estado de la Actividad", "Fecha Ejecucion",
+            "Responsable Actividad", "Investigador", "Observaciones",
             "Confirmacion", "Fecha Confirmacion", "Cumplio Plan",
-            "Comentarios Eficacia", "Fecha Eficacia", "Eficaz"
+            "Comentarios Eficacia", "Fecha Eficacia", "Eficaz",
+            "Entidad", "Sistema Gestion", "Organizacion", "Reporta"
         };
 
         for (int c = 0; c < headers.Length; c++)
@@ -164,39 +146,34 @@ public class ReporteService
                 // Info general (solo en primera fila de la accion)
                 if (i == 0)
                 {
-                    ws.Cell(fila, col).Value = $"ACC-{a.Id:D4}";
-                    ws.Cell(fila, col + 1).Value = a.Fecha.ToString("dd/MM/yyyy");
-                    ws.Cell(fila, col + 2).Value = TipoAccionTexto(a.TipoAccionId);
-                    ws.Cell(fila, col + 3).Value = a.Proceso?.Descripcion ?? "-";
-                    ws.Cell(fila, col + 4).Value = a.Proceso?.Responsable?.Nombre ?? "-";
-                    ws.Cell(fila, col + 5).Value = a.Descripcion;
-                    ws.Cell(fila, col + 6).Value = a.Usuario?.Nombre ?? "-";
-                    ws.Cell(fila, col + 7).Value = maestros.GetValueOrDefault(a.OrigenId, "-");
-                    ws.Cell(fila, col + 8).Value = maestros.GetValueOrDefault(a.EntidadId, "-");
-                    ws.Cell(fila, col + 9).Value = maestros.GetValueOrDefault(a.SistemaGestionId, "-");
-                    ws.Cell(fila, col + 10).Value = maestros.GetValueOrDefault(a.OrganizacionId, "-");
-                    ws.Cell(fila, col + 11).Value = maestros.GetValueOrDefault(a.SitioId, "-");
-                    ws.Cell(fila, col + 12).Value = a.Estado?.Descripcion ?? "-";
-
-                    ws.Cell(fila, col + 13).Value = a.Solucion?.CorreccionPropuesta ?? "";
-                    ws.Cell(fila, col + 14).Value = a.Solucion?.AnalisisCausa ?? "";
-                    ws.Cell(fila, col + 15).Value = a.Solucion?.UsuarioInvestiga?.Nombre ?? "";
-                    ws.Cell(fila, col + 16).Value = a.Solucion?.FechaInvestigacion.ToString("dd/MM/yyyy") ?? "";
-                    ws.Cell(fila, col + 17).Value = a.Solucion?.UsuarioCoordina?.Nombre ?? "";
-                    ws.Cell(fila, col + 18).Value = a.Solucion?.FechaCompromiso.ToString("dd/MM/yyyy") ?? "";
+                    ws.Cell(fila, col++).Value = $"ACC-{a.Id:D4}";
+                    ws.Cell(fila, col++).Value = a.Fecha.ToString("dd/MM/yyyy");
+                    ws.Cell(fila, col++).Value = TipoAccionTexto(a.TipoAccionId);
+                    ws.Cell(fila, col++).Value = a.Estado?.Descripcion ?? "-";
+                    ws.Cell(fila, col++).Value = a.Proceso?.Descripcion ?? "-";
+                    ws.Cell(fila, col++).Value = a.Proceso?.Responsable?.Nombre ?? "-";
+                    ws.Cell(fila, col++).Value = maestros.GetValueOrDefault(a.OrigenId, "-");
+                    ws.Cell(fila, col++).Value = maestros.GetValueOrDefault(a.SitioId, "-");
+                    ws.Cell(fila, col++).Value = a.Descripcion;
+                    ws.Cell(fila, col++).Value = a.Solucion?.CorreccionPropuesta ?? "";
+                    ws.Cell(fila, col++).Value = a.Solucion?.AnalisisCausa ?? "";
+                    ws.Cell(fila, col++).Value = a.Solucion?.FechaCompromiso.ToString("dd/MM/yyyy") ?? "";
+                }
+                else
+                {
+                    col += 12;
                 }
 
-                col = 20; // Columna de actividades
-
+                // Actividades
                 if (i < actividades.Count)
                 {
                     var act = actividades[i];
                     ws.Cell(fila, col++).Value = act.Descripcion;
-                    ws.Cell(fila, col++).Value = act.Agencia;
-                    ws.Cell(fila, col++).Value = act.Responsable?.Nombre ?? "-";
                     ws.Cell(fila, col++).Value = act.Fecha.ToString("dd/MM/yyyy");
-                    ws.Cell(fila, col++).Value = act.Ejecutada ? "Si" : "No";
+                    ws.Cell(fila, col++).Value = act.Ejecutada ? "Ejecutada" : "Pendiente";
                     ws.Cell(fila, col++).Value = act.FechaEjecucion?.ToString("dd/MM/yyyy") ?? "";
+                    ws.Cell(fila, col++).Value = act.Responsable?.Nombre ?? "-";
+                    ws.Cell(fila, col++).Value = a.Solucion?.UsuarioInvestiga?.Nombre ?? "";
                     ws.Cell(fila, col++).Value = act.Observaciones ?? "";
                 }
                 else
@@ -204,7 +181,7 @@ public class ReporteService
                     col += 7;
                 }
 
-                // Confirmacion y eficacia (solo en primera fila)
+                // Confirmacion, Eficacia e Info Adicional (solo en primera fila)
                 if (i == 0)
                 {
                     ws.Cell(fila, col++).Value = a.ConfirmacionPlanAccion?.DetallesCumplimiento ?? "";
@@ -213,6 +190,10 @@ public class ReporteService
                     ws.Cell(fila, col++).Value = a.Eficacia?.Comentarios ?? "";
                     ws.Cell(fila, col++).Value = a.Eficacia?.Fecha.ToString("dd/MM/yyyy") ?? "";
                     ws.Cell(fila, col++).Value = a.Eficacia != null ? (a.Eficacia.Eficaz ? "Eficaz" : "No Eficaz") : "";
+                    ws.Cell(fila, col++).Value = maestros.GetValueOrDefault(a.EntidadId, "-");
+                    ws.Cell(fila, col++).Value = maestros.GetValueOrDefault(a.SistemaGestionId, "-");
+                    ws.Cell(fila, col++).Value = maestros.GetValueOrDefault(a.OrganizacionId, "-");
+                    ws.Cell(fila, col++).Value = a.Usuario?.Nombre ?? "-";
                 }
 
                 fila++;
@@ -222,13 +203,13 @@ public class ReporteService
             if (filasPorAccion > 1)
             {
                 int filaInicio = fila - filasPorAccion;
-                for (int c = 1; c <= 19; c++)
+                for (int c = 1; c <= 12; c++)
                 {
                     ws.Range(filaInicio, c, fila - 1, c).Merge();
                     ws.Cell(filaInicio, c).Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
                 }
-                // Merge confirmacion y eficacia
-                for (int c = 27; c <= 32; c++)
+                // Merge confirmacion, eficacia e info adicional
+                for (int c = 20; c <= 30; c++)
                 {
                     ws.Range(filaInicio, c, fila - 1, c).Merge();
                     ws.Cell(filaInicio, c).Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
@@ -264,10 +245,10 @@ public class ReporteService
 
         var headers = new[]
         {
-            "Consecutivo", "Fecha", "Tipo Accion", "Descripcion", "Reporta",
-            "Origen", "Entidad", "Sistema Gestion", "Organizacion", "Sitio",
-            "Estado", "Fecha Compromiso",
-            "Cumplio Plan", "Eficaz"
+            "Consecutivo", "Fecha Detección", "Tipo Accion", "Estado", "Descripcion", 
+            "Origen", "Centro de Trabajo", "Correccion Propuesta", "Analisis Causa", 
+            "Fecha Compromiso", "Cumplio Plan", "Comentarios Eficacia", "Eficaz",
+            "Entidad", "Sistema Gestion", "Organizacion", "Reporta"
         };
 
         int filaHeader = 5;
@@ -283,17 +264,20 @@ public class ReporteService
             ws.Cell(fila, col++).Value = $"ACC-{a.Id:D4}";
             ws.Cell(fila, col++).Value = a.Fecha.ToString("dd/MM/yyyy");
             ws.Cell(fila, col++).Value = TipoAccionTexto(a.TipoAccionId);
+            ws.Cell(fila, col++).Value = a.Estado?.Descripcion ?? "-";
             ws.Cell(fila, col++).Value = a.Descripcion;
-            ws.Cell(fila, col++).Value = a.Usuario?.Nombre ?? "-";
             ws.Cell(fila, col++).Value = maestros.GetValueOrDefault(a.OrigenId, "-");
+            ws.Cell(fila, col++).Value = maestros.GetValueOrDefault(a.SitioId, "-");
+            ws.Cell(fila, col++).Value = a.Solucion?.CorreccionPropuesta ?? "";
+            ws.Cell(fila, col++).Value = a.Solucion?.AnalisisCausa ?? "";
+            ws.Cell(fila, col++).Value = a.Solucion?.FechaCompromiso.ToString("dd/MM/yyyy") ?? "";
+            ws.Cell(fila, col++).Value = a.ConfirmacionPlanAccion != null ? (a.ConfirmacionPlanAccion.CumplioPlan ? "Si" : "No") : "";
+            ws.Cell(fila, col++).Value = a.Eficacia?.Comentarios ?? "";
+            ws.Cell(fila, col++).Value = a.Eficacia != null ? (a.Eficacia.Eficaz ? "Eficaz" : "No Eficaz") : "";
             ws.Cell(fila, col++).Value = maestros.GetValueOrDefault(a.EntidadId, "-");
             ws.Cell(fila, col++).Value = maestros.GetValueOrDefault(a.SistemaGestionId, "-");
             ws.Cell(fila, col++).Value = maestros.GetValueOrDefault(a.OrganizacionId, "-");
-            ws.Cell(fila, col++).Value = maestros.GetValueOrDefault(a.SitioId, "-");
-            ws.Cell(fila, col++).Value = a.Estado?.Descripcion ?? "-";
-            ws.Cell(fila, col++).Value = a.Solucion?.FechaCompromiso.ToString("dd/MM/yyyy") ?? "";
-            ws.Cell(fila, col++).Value = a.ConfirmacionPlanAccion != null ? (a.ConfirmacionPlanAccion.CumplioPlan ? "Si" : "No") : "";
-            ws.Cell(fila, col++).Value = a.Eficacia != null ? (a.Eficacia.Eficaz ? "Eficaz" : "No Eficaz") : "";
+            ws.Cell(fila, col++).Value = a.Usuario?.Nombre ?? "-";
             fila++;
         }
 

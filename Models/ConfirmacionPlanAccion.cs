@@ -23,6 +23,9 @@ namespace ActividadApp.Models
         [Required]
         public bool CumplioPlan { get; set; }
 
+        [Required]
+        public int DiasParaVerificar { get; set; } = 90;
+
         // Relaciones
         public virtual Usuario Responsable { get; set; }
     }
