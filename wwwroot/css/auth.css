@@ -2,26 +2,35 @@
     margin: 0;
     padding: 0;
     min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    background-image: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+    background-image: url('/img/tsp-background.jpg');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
+    background-repeat: no-repeat;
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    position: relative;
+    overflow: hidden;
 }
 
+/* Overlay oscuro para mejorar legibilidad del formulario */
 .auth-body::before {
     content: '';
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(5px);
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* Logo TSP - removido, usa la imagen */
+.auth-body::after {
+    content: '';
 }
 
 .auth-container {
@@ -226,4 +235,29 @@
     .auth-right {
         max-height: 90vh;
     }
+}
+
+/* Efectos de decoración - Líneas de transporte */
+.auth-container::before {
+    content: '';
+    position: fixed;
+    top: 45%;
+    left: -10%;
+    width: 120%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(0, 255, 200, 0.1) 20%, rgba(0, 255, 200, 0.1) 80%, transparent);
+    z-index: 2;
+    pointer-events: none;
+}
+
+.auth-container::after {
+    content: '';
+    position: fixed;
+    top: 55%;
+    left: -10%;
+    width: 120%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(255, 150, 0, 0.1) 20%, rgba(255, 150, 0, 0.1) 80%, transparent);
+    z-index: 2;
+    pointer-events: none;
 }
