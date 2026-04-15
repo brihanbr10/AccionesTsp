@@ -80,7 +80,7 @@ public class ReporteService
         foreach (var a in acciones)
         {
             int col = 1;
-            ws.Cell(fila, col++).Value = $"ACC-{a.Id:D4}";
+            ws.Cell(fila, col++).Value = $"{a.Id:D4}";
             ws.Cell(fila, col++).Value = a.Fecha.ToString("dd/MM/yyyy");
             ws.Cell(fila, col++).Value = TipoAccionTexto(a.TipoAccionId);
             ws.Cell(fila, col++).Value = a.Estado?.Descripcion ?? "-";
@@ -146,7 +146,7 @@ public class ReporteService
                 // Info general (solo en primera fila de la accion)
                 if (i == 0)
                 {
-                    ws.Cell(fila, col++).Value = $"ACC-{a.Id:D4}";
+                    ws.Cell(fila, col++).Value = $"{a.Id:D4}";
                     ws.Cell(fila, col++).Value = a.Fecha.ToString("dd/MM/yyyy");
                     ws.Cell(fila, col++).Value = TipoAccionTexto(a.TipoAccionId);
                     ws.Cell(fila, col++).Value = a.Estado?.Descripcion ?? "-";
@@ -261,7 +261,7 @@ public class ReporteService
         foreach (var a in acciones)
         {
             int col = 1;
-            ws.Cell(fila, col++).Value = $"ACC-{a.Id:D4}";
+            ws.Cell(fila, col++).Value = $"{a.Id:D4}";
             ws.Cell(fila, col++).Value = a.Fecha.ToString("dd/MM/yyyy");
             ws.Cell(fila, col++).Value = TipoAccionTexto(a.TipoAccionId);
             ws.Cell(fila, col++).Value = a.Estado?.Descripcion ?? "-";

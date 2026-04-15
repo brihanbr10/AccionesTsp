@@ -52,8 +52,8 @@ else
     <div class="accordion" id="accordionAcciones">
         @foreach (var accion in accionesFiltradasList)
         {
-            var collapseId = $"collapse-{accion.Id}";
-            var headingId = $"heading-{accion.Id}";
+            var collapseId = $"collapse-{accion.Id.ToString().PadLeft(4,'0')}";
+            var headingId = $"heading-{accion.Id.ToString().PadLeft(4, '0')}";
 
             <div class="accordion-item mb-2 border rounded shadow-sm">
                 <h2 class="accordion-header" id="@headingId">
@@ -62,7 +62,7 @@ else
                             aria-expanded="false" aria-controls="@collapseId">
                         <div class="d-flex w-100 justify-content-between align-items-center me-3">
                             <div>
-                                <strong class="me-3">@accion.Id</strong>
+                                <strong class="me-3">@accion.Id.ToString().PadLeft(4, '0')</strong>
                                 <span>@accion.Descripcion</span>
                             </div>
                             <div class="d-flex align-items-center gap-2">
@@ -368,7 +368,7 @@ else
 
     private List<Accion> accionesFiltradasList => string.IsNullOrWhiteSpace(filtroId) 
         ? acciones 
-        : acciones.Where(a => a.Id.ToString().StartsWith(filtroId)).ToList();
+        : acciones.Where(a => a.Id.ToString().PadLeft(4,'0').StartsWith(filtroId)).ToList();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
