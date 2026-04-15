@@ -761,13 +761,6 @@
                 <div class="modal-body">
                     <p>¿Está seguro de finalizar esta tarea?</p>
                     <p class="text-muted small mb-3">Esta acción no se puede deshacer.</p>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Comentario de ejecución <span class="text-danger">*</span></label>
-                        <textarea class="form-control" rows="3" @bind="comentarioEjecucion" 
-                                  placeholder="Describa cómo se ejecutó la actividad..."></textarea>
-                        <small class="text-muted">Este comentario es obligatorio para documentar la ejecución.</small>
-                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @onclick="CancelarConfirmacionEjecutada">Cancelar</button>
@@ -787,7 +780,6 @@
     private ResultModal? resultModal;
     private bool showConfirmEjecutada = false;
     private int? actividadIndexConfirm = null;
-    private string comentarioEjecucion = string.Empty;
 
     private UserSession? userSession;
     private Accion? accion;
@@ -971,21 +963,13 @@
     {
         if (actividades[index].Ejecutada) return;
         actividadIndexConfirm = index;
-        comentarioEjecucion = string.Empty; // Limpiar comentario
         showConfirmEjecutada = true;
     }
 
     private async Task ConfirmarEjecutada()
     {
         if (!actividadIndexConfirm.HasValue) return;
-
-        // Validar que el comentario no esté vacío
-        if (string.IsNullOrWhiteSpace(comentarioEjecucion))
-        {
-            await JSRuntime.InvokeVoidAsync("alert", "Debe ingresar un comentario para documentar la ejecución de la actividad.");
-            return;
-        }
-
+        
         var act = actividades[actividadIndexConfirm.Value];
         if (act.FechaEjecucion == null)
         {
@@ -998,18 +982,6 @@
             // Marcar actividad como ejecutada
             act.Ejecutada = true;
 
-            // Crear seguimiento de actividad con el comentario
-            var seguimiento = new SeguimientoActividad
-            {
-                ActividadId = act.Id,
-                UsuarioId = userSession.UserId,
-                Fecha = DateTime.UtcNow,
-                Comentario = comentarioEjecucion.Trim()
-            };
-
-            DbContext.SeguimientosActividades.Add(seguimiento);
-            await DbContext.SaveChangesAsync();
-
             // Recargar seguimientos para mostrar el nuevo comentario
             var seguimientos = await DbContext.SeguimientosActividades
                 .Where(s => s.ActividadId == act.Id)
@@ -1018,7 +990,7 @@
                 .ToListAsync();
             seguimientosActividades[act.Id] = seguimientos;
 
-            successMessage = "Actividad finalizada correctamente con comentario registrado.";
+            successMessage = "Actividad finalizada correctamente.";
             await Task.Delay(3000);
             successMessage = string.Empty;
             StateHasChanged();
@@ -1032,7 +1004,6 @@
         {
             showConfirmEjecutada = false;
             actividadIndexConfirm = null;
-            comentarioEjecucion = string.Empty;
         }
     }
 
@@ -1040,7 +1011,6 @@
     {
         showConfirmEjecutada = false;
         actividadIndexConfirm = null;
-        comentarioEjecucion = string.Empty;
     }
 
     private async Task AgregarSeguimientoSgi()
