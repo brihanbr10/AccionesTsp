@@ -1,4 +1,4 @@
-@page "/acciones/edit/{Id:int}"
+Ôªø@page "/acciones/edit/{Id:int}"
 @inject AccionService AccionService
 @inject AuthenticationStateProvider AuthStateProvider
 @inject AuthService AuthService
@@ -15,11 +15,11 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.EntityFrameworkCore
 
-<PageTitle>Editar AcciÛn</PageTitle>
+<PageTitle>Editar Acci√≥n</PageTitle>
 
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Editar AcciÛn</h2>
+        <h2>Editar Acci√≥n</h2>
         <a href="/acciones" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i>Volver
         </a>
@@ -31,13 +31,13 @@
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Cargando...</span>
             </div>
-            <p class="mt-2">Cargando acciÛn...</p>
+            <p class="mt-2">Cargando acci√≥n...</p>
         </div>
     }
     else if (accion == null)
     {
         <div class="alert alert-danger">
-            No se encontrÛ la acciÛn solicitada.
+            No se encontr√≥ la acci√≥n solicitada.
         </div>
         <a href="/acciones" class="btn btn-secondary">Volver</a>
     }
@@ -45,10 +45,10 @@
     {
         <ResultModal @ref="resultModal" />
 
-        <!-- SECCION 1: InformaciÛn General (Solo lectura) -->
+        <!-- SECCION 1: Informaci√≥n General (Solo lectura) -->
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-primary text-white">
-                <i class="bi bi-info-circle me-2"></i>1. InformaciÛn General
+                <i class="bi bi-info-circle me-2"></i>1. Informaci√≥n General
             </div>
             <div class="card-body">
                 <div class="row">
@@ -61,11 +61,11 @@
                         <input type="text" class="form-control" value="@accion.Fecha.ToString("dd/MM/yyyy")" readonly />
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label class="form-label">Tipo de AcciÛn</label>
+                        <label class="form-label">Tipo de Acci√≥n</label>
                         <input type="text" class="form-control" value="@TipoAccionTexto" readonly />
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label class="form-label">OrganizaciÛn</label>
+                        <label class="form-label">Organizaci√≥n</label>
                         <input type="text" class="form-control" value="@NombreMaestro(organizaciones, accion.OrganizacionId)" readonly />
                     </div>
                     <div class="col-md-4 mb-3">
@@ -85,7 +85,7 @@
                         <input type="text" class="form-control" value="@NombreMaestro(entidades, accion.EntidadId)" readonly />
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label class="form-label">Sistema de GestiÛn</label>
+                        <label class="form-label">Sistema de Gesti√≥n</label>
                         <input type="text" class="form-control" value="@NombreMaestro(sistemasGestion, accion.SistemaGestionId)" readonly />
                     </div>
                     <div class="col-md-4 mb-3">
@@ -93,7 +93,7 @@
                         <input type="text" class="form-control" value="@NombreMaestro(sitios, accion.SitioId)" readonly />
                     </div>
                     <div class="col-md-12 mb-3">
-                        <label class="form-label">DescripciÛn del hallazgo</label>
+                        <label class="form-label">Descripci√≥n del hallazgo</label>
                         <textarea class="form-control" rows="3" readonly>@accion.Descripcion</textarea>
                     </div>
                 </div>
@@ -121,7 +121,7 @@
                                 <input type="text" class="form-control" value="@NombreUsuario(solucion.UsuarioInvestigaId)" readonly />
                             </div>
                             <div class="col-md-3 mb-3">
-                                <label class="form-label">Fecha InvestigaciÛn</label>
+                                <label class="form-label">Fecha Investigaci√≥n</label>
                                 <input type="text" class="form-control" value="@solucion.FechaInvestigacion.ToString("dd/MM/yyyy")" readonly />
                             </div>
                             <div class="col-md-3 mb-3">
@@ -133,11 +133,11 @@
                                 <input type="text" class="form-control" value="@solucion.FechaCompromiso.ToString("dd/MM/yyyy")" readonly />
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">CorrecciÛn Propuesta</label>
+                                <label class="form-label">Correcci√≥n Propuesta</label>
                                 <textarea class="form-control" rows="3" readonly>@solucion.CorreccionPropuesta</textarea>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">An·lisis de Causa o PropÛsito de mejora</label>
+                                <label class="form-label">An√°lisis de Causa o Prop√≥sito de mejora</label>
                                 <textarea class="form-control" rows="3" readonly>@solucion.AnalisisCausa</textarea>
                             </div>
                         </div>
@@ -157,7 +157,7 @@
                                 </select>
                             </div>
                             <div class="col-md-3 mb-3">
-                                <label class="form-label">Fecha InvestigaciÛn <span class="text-danger">*</span></label>
+                                <label class="form-label">Fecha Investigaci√≥n <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" @bind="fechaInvestigacion" @bind:after="ValidarFechas" min="@accion.Fecha.ToString("yyyy-MM-dd")" />
                             </div>
                             <div class="col-md-3 mb-3">
@@ -175,11 +175,11 @@
                                 <input type="date" class="form-control" @bind="fechaCompromiso" @bind:after="ValidarFechas" min="@fechaInvestigacion.ToString("yyyy-MM-dd")" />
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">CorrecciÛn Propuesta <span class="text-danger">*</span></label>
+                                <label class="form-label">Correcci√≥n Propuesta <span class="text-danger">*</span></label>
                                 <textarea class="form-control" @bind="solucion.CorreccionPropuesta" rows="3"></textarea>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">An·lisis de Causa o PropÛsito de mejora <span class="text-danger">*</span></label>
+                                <label class="form-label">An√°lisis de Causa o Prop√≥sito de mejora <span class="text-danger">*</span></label>
                                 <textarea class="form-control" @bind="solucion.AnalisisCausa" rows="3"></textarea>
                             </div>
                         </div>
@@ -205,7 +205,7 @@
                                 <table class="table table-sm table-bordered">
                                     <thead class="table-light">
                                         <tr>
-                                            <th>DescripciÛn</th>
+                                            <th>Descripci√≥n</th>
                                             <th>Responsable</th>
                                             <th>Agencia</th>
                                             <th>Fecha</th>
@@ -261,9 +261,17 @@
                                                 <i class="bi @(act.Ejecutada ? "bi-check-circle-fill text-success" : "bi-clock text-warning") me-2"></i>
                                                 <strong>@act.Descripcion</strong>
                                             </span>
-                                            <span class="badge @(act.Ejecutada ? "bg-success" : "bg-warning text-dark")">
-                                                @(act.Ejecutada ? "Ejecutada" : "Pendiente")
-                                            </span>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="badge @(act.Ejecutada ? "bg-success" : "bg-warning text-dark")">
+                                                    @(act.Ejecutada ? "Ejecutada" : "Pendiente")
+                                                </span>
+                                                @if (PuedeEliminarActividadGuardada(act))
+                                                {
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => EliminarActividadGuardada(index)">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                }
+                                            </div>
                                         </div>
                                         <div class="card-body">
                                             <div class="row">
@@ -306,13 +314,13 @@
                                                     @if (actividadExpandidaIndex == index)
                                                     {
                                                         <div class="mt-2 border rounded p-2 bg-light">
-                                                            <!-- HistÛrico de observaciones -->
+                                                            <!-- Hist√≥rico de observaciones -->
                                                             @{
                                                                 var seguimientos = ObtenerSeguimientosActividad(act.Id);
                                                                 if (seguimientos.Any())
                                                                 {
                                                                     <div class="mb-2">
-                                                                        <small class="d-block text-muted fw-bold mb-2">HistÛrico:</small>
+                                                                        <small class="d-block text-muted fw-bold mb-2">Hist√≥rico:</small>
                                                                         <div style="max-height: 150px; overflow-y: auto;">
                                                                             @foreach (var seg in seguimientos)
                                                                             {
@@ -328,13 +336,13 @@
                                                                 }
                                                             }
 
-                                                            <!-- Agregar nueva observaciÛn -->
+                                                            <!-- Agregar nueva observaci√≥n -->
                                                             @if (!act.Ejecutada)
                                                             {
                                                                 <div class="mt-2 pt-2 border-top">
                                                                     <textarea class="form-control form-control-sm" rows="2"
                                                                               @bind="nuevosComentariosActividad[index]"
-                                                                              placeholder="Agregar nueva observaciÛn..."
+                                                                              placeholder="Agregar nueva observaci√≥n..."
                                                                               disabled="@(isLoadingActividad.ContainsKey(index) && isLoadingActividad[index])"></textarea>
                                                                     <button type="button" class="btn btn-sm btn-success mt-2" 
                                                                             @onclick="() => AgregarSeguimientoActividad(act.Id, index)"
@@ -519,7 +527,7 @@
                     <div class="card-body">
                         <!-- SUBSECCION: Agregar Nuevo Seguimiento -->
                         <div class="border-bottom pb-4 mb-4">
-                            <h6 class="mb-3"><i class="bi bi-pencil-square me-2"></i>Agregar Nueva ObservaciÛn</h6>
+                            <h6 class="mb-3"><i class="bi bi-pencil-square me-2"></i>Agregar Nueva Observaci√≥n</h6>
                             <div class="row">
                                 <div class="col-md-9">
                                     <label class="form-label text-muted small mb-1"><strong>Comentario</strong></label>
@@ -569,7 +577,7 @@
                             }
                             else
                             {
-                                <p class="text-muted fst-italic mb-0"><i class="bi bi-inbox me-1"></i>Sin observaciones registradas a˙n.</p>
+                                <p class="text-muted fst-italic mb-0"><i class="bi bi-inbox me-1"></i>Sin observaciones registradas a√∫n.</p>
                             }
                         </div>
                     </div>
@@ -580,10 +588,10 @@
 
         @if (tieneSolucionGuardada)
         {
-        <!-- SECCION 3: ConfirmaciÛn del Plan de AcciÛn -->
+        <!-- SECCION 3: Confirmaci√≥n del Plan de Acci√≥n -->
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-clipboard-check me-2"></i>3. ConfirmaciÛn del Plan de AcciÛn</span>
+                <span><i class="bi bi-clipboard-check me-2"></i>3. Confirmaci√≥n del Plan de Acci√≥n</span>
                 @if (todasActividadesEjecutadas || tieneConfirmacionGuardada)
                 {
                     <div class="form-check form-switch mb-0">
@@ -617,7 +625,7 @@
                                 <input type="text" class="form-control" value="@NombreUsuario(confirmacion.ResponsableId)" readonly />
                             </div>
                             <div class="col-md-3 mb-3">
-                                <label class="form-label">CumpliÛ el Plan</label>
+                                <label class="form-label">Cumpli√≥ el Plan</label>
                                 <div class="mt-2">
                                     @if (confirmacion.CumplioPlan)
                                     {
@@ -630,8 +638,13 @@
                                 </div>
                             </div>
                             <div class="col-md-3 mb-3">
-                                <label class="form-label">DÌas para verificar eficacia</label>
-                                <input type="text" class="form-control" value="@confirmacion.DiasParaVerificar dÌas" readonly />
+                                <label class="form-label">D√≠as para verificar eficacia</label>
+                                <input type="text" class="form-control" value="@confirmacion.DiasParaVerificar d√≠as" readonly />
+                            </div>
+                            <div class="col-12 d-flex justify-content-end">
+                                <button type="button" class="btn btn-outline-danger" @onclick="EliminarConfirmacion">
+                                    <i class="bi bi-trash me-1"></i>Eliminar confirmaci√≥n
+                                </button>
                             </div>
                         </div>
                     }
@@ -657,23 +670,23 @@
                                 </select>
                             </div>
                             <div class="col-md-3 mb-3">
-                                <label class="form-label">CumpliÛ el Plan</label>
+                                <label class="form-label">Cumpli√≥ el Plan</label>
                                 <div class="form-check form-switch mt-2">
                                     <input class="form-check-input" type="checkbox" @bind="confirmacion.CumplioPlan" />
                                     <label class="form-check-label">@(confirmacion.CumplioPlan ? "Si" : "No")</label>
                                 </div>
                             </div>
                             <div class="col-md-3 mb-3">
-                                <label class="form-label">DÌas para verificar eficacia <span class="text-danger">*</span></label>
+                                <label class="form-label">D√≠as para verificar eficacia <span class="text-danger">*</span></label>
                                 <select class="form-select" @bind="confirmacion.DiasParaVerificar">
-                                    <option value="20">20 dÌas</option>
-                                    <option value="40">40 dÌas</option>
-                                    <option value="60">60 dÌas</option>
-                                    <option value="90">90 dÌas</option>
-                                    <option value="120">120 dÌas</option>
+                                    <option value="20">20 d√≠as</option>
+                                    <option value="40">40 d√≠as</option>
+                                    <option value="60">60 d√≠as</option>
+                                    <option value="90">90 d√≠as</option>
+                                    <option value="120">120 d√≠as</option>
                                 </select>
                                 <small class="text-muted d-block mt-1">
-                                    <i class="bi bi-info-circle me-1"></i>Tiempo para verificar la eficacia de la acciÛn
+                                    <i class="bi bi-info-circle me-1"></i>Tiempo para verificar la eficacia de la acci√≥n
                                 </small>
                             </div>
                         </div>
@@ -759,8 +772,8 @@
                     <button type="button" class="btn-close" @onclick="CancelarConfirmacionEjecutada"></button>
                 </div>
                 <div class="modal-body">
-                    <p>øEst· seguro de finalizar esta tarea?</p>
-                    <p class="text-muted small mb-3">Esta acciÛn no se puede deshacer.</p>
+                    <p>¬øEst√° seguro de finalizar esta tarea?</p>
+                    <p class="text-muted small mb-3">Esta acci√≥n no se puede deshacer.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @onclick="CancelarConfirmacionEjecutada">Cancelar</button>
@@ -939,6 +952,49 @@
         actividades.RemoveAt(index);
     }
 
+    private bool PuedeEliminarActividadGuardada(Actividad actividad)
+    {
+        return actividad.Id > 0
+            && tieneSolucionGuardada
+            && !actividad.Ejecutada
+            && (esAdmin || esInvestigador || !tieneSolucionGuardada);
+    }
+
+    private async Task EliminarActividadGuardada(int index)
+    {
+        if (index < 0 || index >= actividades.Count)
+            return;
+
+        var actividad = actividades[index];
+        if (!PuedeEliminarActividadGuardada(actividad))
+            return;
+
+        var confirmado = await JSRuntime.InvokeAsync<bool>("confirm", $"¬øDesea eliminar la actividad '{actividad.Descripcion}'?");
+        if (!confirmado)
+            return;
+
+        try
+        {
+            var seguimientoActividad = await DbContext.Actividades
+                .Include(a => a.Seguimientos)
+                .FirstOrDefaultAsync(a => a.Id == actividad.Id);
+
+            if (seguimientoActividad != null)
+            {
+                DbContext.Actividades.Remove(seguimientoActividad);
+                await DbContext.SaveChangesAsync();
+                actividades.RemoveAt(index);
+                successMessage = "Actividad eliminada correctamente.";
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al eliminar la actividad: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
     private void OnResponsableActividadChanged(int index)
     {
         if (index >= 0 && index < actividades.Count)
@@ -973,7 +1029,7 @@
         var act = actividades[actividadIndexConfirm.Value];
         if (act.FechaEjecucion == null)
         {
-            await JSRuntime.InvokeVoidAsync("alert", "Debe indicar la fecha de ejecuciÛn antes de finalizar la tarea.");
+            await JSRuntime.InvokeVoidAsync("alert", "Debe indicar la fecha de ejecuci√≥n antes de finalizar la tarea.");
             return;
         }
 
@@ -981,6 +1037,36 @@
         {
             // Marcar actividad como ejecutada
             act.Ejecutada = true;
+
+            // Cerrar el modal inmediatamente al confirmar
+            showConfirmEjecutada = false;
+            actividadIndexConfirm = null;
+            StateHasChanged();
+
+            // Persistir el cambio de la actividad ejecutada
+            if (act.Id > 0)
+            {
+                DbContext.Actividades.Update(act);
+                await DbContext.SaveChangesAsync();
+
+                var proceso = procesos.FirstOrDefault(p => p.Id == accion?.ProcesoId);
+                var consecutivo = accion != null ? $"{accion.Id:D4}" : string.Empty;
+
+                if (act.ResponsableId > 0)
+                {
+                    var responsableActividad = usuarios.FirstOrDefault(u => u.Id == act.ResponsableId);
+                    if (responsableActividad != null && accion != null)
+                    {
+                        await EmailService.EnviarActividadEjecutada(
+                            responsableActividad.Email,
+                            responsableActividad.Nombre,
+                            consecutivo,
+                            proceso?.Descripcion ?? "-",
+                            act.Descripcion,
+                            act.FechaEjecucion ?? DateTime.UtcNow);
+                    }
+                }
+            }
 
             // Recargar seguimientos para mostrar el nuevo comentario
             var seguimientos = await DbContext.SeguimientosActividades
@@ -1017,10 +1103,10 @@
     {
         if (string.IsNullOrWhiteSpace(nuevoComentarioSgi) || accion == null || userSession == null)
         {
-            await JSRuntime.InvokeVoidAsync("alert", "El campo de comentario no puede estar vacÌo.");
+            await JSRuntime.InvokeVoidAsync("alert", "El campo de comentario no puede estar vac√≠o.");
             return;
         }
-        if (isLoadingSgi) return; // ProtecciÛn contra doble clic
+        if (isLoadingSgi) return; // Protecci√≥n contra doble clic
 
         isLoadingSgi = true;
         errorMessage = string.Empty;
@@ -1029,7 +1115,7 @@
 
         try
          {
-             // Usar siempre los dÌas seleccionados actualmente
+             // Usar siempre los d√≠as seleccionados actualmente
              var seguimiento = new SeguimientoSgi
              {
                  AccionId = accion.Id,
@@ -1043,7 +1129,7 @@
 
             nuevoComentarioSgi = string.Empty;
             errorMessage = string.Empty;
-            successMessage = "ObservaciÛn agregada correctamente.";
+            successMessage = "Observaci√≥n agregada correctamente.";
 
             // Recargar seguimientos desde la base de datos para sincronizar
             seguimientosSgi = await DbContext.SeguimientosSgi
@@ -1054,14 +1140,14 @@
 
             StateHasChanged();
 
-            // Limpiar mensaje despuÈs de 3 segundos
+            // Limpiar mensaje despu√©s de 3 segundos
             await Task.Delay(3000);
             successMessage = string.Empty;
             StateHasChanged();
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error al agregar observaciÛn: {ex.Message}";
+            errorMessage = $"Error al agregar observaci√≥n: {ex.Message}";
             StateHasChanged();
         }
         finally
@@ -1076,10 +1162,10 @@
             string.IsNullOrWhiteSpace(nuevosComentariosActividad[actividadIndex]) || 
             userSession == null)
         {
-            await JSRuntime.InvokeVoidAsync("alert", "El campo de observaciÛn no puede estar vacÌo.");
+            await JSRuntime.InvokeVoidAsync("alert", "El campo de observaci√≥n no puede estar vac√≠o.");
             return;
         }
-        if (isLoadingActividad.ContainsKey(actividadIndex) && isLoadingActividad[actividadIndex]) return; // ProtecciÛn contra doble clic
+        if (isLoadingActividad.ContainsKey(actividadIndex) && isLoadingActividad[actividadIndex]) return; // Protecci√≥n contra doble clic
 
         if (!isLoadingActividad.ContainsKey(actividadIndex))
         {
@@ -1106,7 +1192,7 @@
 
             nuevosComentariosActividad[actividadIndex] = string.Empty;
             errorMessage = string.Empty;
-            successMessage = "ObservaciÛn agregada correctamente.";
+            successMessage = "Observaci√≥n agregada correctamente.";
 
             // Recargar seguimientos desde la base de datos para sincronizar
             var seguimientos = await DbContext.SeguimientosActividades
@@ -1119,14 +1205,14 @@
 
             StateHasChanged();
 
-            // Limpiar mensaje despuÈs de 3 segundos
+            // Limpiar mensaje despu√©s de 3 segundos
             await Task.Delay(3000);
             successMessage = string.Empty;
             StateHasChanged();
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error al agregar observaciÛn: {ex.Message}";
+            errorMessage = $"Error al agregar observaci√≥n: {ex.Message}";
             StateHasChanged();
         }
         finally
@@ -1191,6 +1277,66 @@
         }
     }
 
+    private async Task EliminarConfirmacion()
+    {
+        if (accion == null || !tieneConfirmacionGuardada)
+            return;
+
+        var confirmado = await JSRuntime.InvokeAsync<bool>("confirm", "¬øDesea eliminar la confirmaci√≥n de esta acci√≥n?");
+        if (!confirmado)
+            return;
+
+        try
+        {
+            var confirmacionGuardada = await DbContext.ConfirmacionesPlanAccion
+                .FirstOrDefaultAsync(c => c.AccionId == accion.Id);
+
+            if (confirmacionGuardada != null)
+            {
+                DbContext.ConfirmacionesPlanAccion.Remove(confirmacionGuardada);
+                await DbContext.SaveChangesAsync();
+            }
+
+            accion.ConfirmacionPlanAccion = null;
+            confirmacion = new ConfirmacionPlanAccion();
+            fechaConfirmacion = DateTime.UtcNow;
+            incluirConfirmacion = false;
+            tieneConfirmacionGuardada = false;
+            incluirEficacia = false;
+
+            if (accion.Eficacia != null)
+            {
+                var eficaciaGuardada = await DbContext.Eficacias
+                    .FirstOrDefaultAsync(e => e.AccionId == accion.Id);
+
+                if (eficaciaGuardada != null)
+                {
+                    DbContext.Eficacias.Remove(eficaciaGuardada);
+                    await DbContext.SaveChangesAsync();
+                }
+
+                accion.Eficacia = null;
+                eficacia = new Eficacia();
+                fechaEficacia = DateTime.UtcNow;
+            }
+
+            if (accion.Solucion != null)
+            {
+                var estadoRecalculado = AccionService.CalcularEstadoId(accion);
+                accion.EstadoId = estadoRecalculado;
+                await AccionService.Update(accion);
+            }
+
+            successMessage = "Confirmaci√≥n eliminada correctamente.";
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al eliminar la confirmaci√≥n: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
     private string NombreMaestro(List<Maestro> lista, int id) =>
         lista.FirstOrDefault(m => m.Id == id)?.Descripcion ?? "-";
 
@@ -1219,6 +1365,9 @@
         try
         {
             accion.UpdatedAt = DateTime.UtcNow;
+            var actividadesNuevas = incluirSolucion && tieneSolucionGuardada && !tieneConfirmacionGuardada
+                ? actividades.Where(a => a.Id == 0).ToList()
+                : new List<Actividad>();
 
             if (incluirSolucion && !tieneSolucionGuardada)
             {
@@ -1226,14 +1375,14 @@
                     string.IsNullOrWhiteSpace(solucion.CorreccionPropuesta) ||
                     solucion.UsuarioInvestigaId == 0 || solucion.UsuarioCoordinaId == 0)
                 {
-                    await resultModal.ShowError("ValidaciÛn", "Todos los campos de la soluciÛn son requeridos.");
+                    await resultModal.ShowError("Validaci√≥n", "Todos los campos de la soluci√≥n son requeridos.");
                     isLoading = false;
                     return;
                 }
 
                 if (actividades.Any(a => string.IsNullOrWhiteSpace(a.Descripcion) || a.ResponsableId == 0))
                 {
-                    await resultModal.ShowError("ValidaciÛn", "Cada actividad debe tener descripciÛn y responsable.");
+                    await resultModal.ShowError("Validaci√≥n", "Cada actividad debe tener descripci√≥n y responsable.");
                     isLoading = false;
                     return;
                 }
@@ -1244,7 +1393,7 @@
                 var sinFecha = actividades.Where(a => a.Ejecutada && a.FechaEjecucion == null).ToList();
                 if (sinFecha.Any())
                 {
-                    await resultModal.ShowError("ValidaciÛn", "Las actividades ejecutadas deben tener fecha de ejecuciÛn.");
+                    await resultModal.ShowError("Validaci√≥n", "Las actividades ejecutadas deben tener fecha de ejecuci√≥n.");
                     isLoading = false;
                     return;
                 }
@@ -1264,7 +1413,7 @@
                     confirmacion.ResponsableId == 0 ||
                     confirmacion.DiasParaVerificar <= 0)
                 {
-                    await resultModal.ShowError("ValidaciÛn", "Todos los campos de la confirmaciÛn son requeridos.");
+                    await resultModal.ShowError("Validaci√≥n", "Todos los campos de la confirmaci√≥n son requeridos.");
                     isLoading = false;
                     return;
                 }
@@ -1281,7 +1430,7 @@
                 if (string.IsNullOrWhiteSpace(eficacia.Comentarios) ||
                     eficacia.ResponsableId == 0)
                 {
-                    await resultModal.ShowError("ValidaciÛn", "Todos los campos de eficacia son requeridos.");
+                    await resultModal.ShowError("Validaci√≥n", "Todos los campos de eficacia son requeridos.");
                     isLoading = false;
                     return;
                 }
@@ -1304,6 +1453,22 @@
                 if (nuevoEstado >= 2 && estadoAnterior < 2 && actividades.Any())
                 {
                     foreach (var act in actividades.Where(a => a.ResponsableId > 0))
+                    {
+                        var usuario = usuarios.FirstOrDefault(u => u.Id == act.ResponsableId);
+                        if (usuario != null)
+                        {
+                            await EmailService.EnviarSolucionRegistrada(
+                                usuario.Email, usuario.Nombre,
+                                consecutivo, proceso?.Descripcion ?? "-",
+                                act.Descripcion, act.Agencia, solucion.FechaCompromiso);
+                        }
+                    }
+                }
+
+                // Nuevas actividades agregadas a una soluci√≥n existente
+                if (actividadesNuevas.Any())
+                {
+                    foreach (var act in actividadesNuevas.Where(a => a.ResponsableId > 0))
                     {
                         var usuario = usuarios.FirstOrDefault(u => u.Id == act.ResponsableId);
                         if (usuario != null)
@@ -1349,14 +1514,14 @@
                 }
 
                 await resultModal.ShowSuccess(
-                    "AcciÛn Actualizada",
+                    "Acci√≥n Actualizada",
                     "Los cambios han sido guardados correctamente.",
                     $"ID: {consecutivo}"
                 );
             }
             else
             {
-                await resultModal.ShowError("Error", "Error al actualizar la acciÛn. Por favor, intenta nuevamente.");
+                await resultModal.ShowError("Error", "Error al actualizar la acci√≥n. Por favor, intenta nuevamente.");
             }
         }
         catch (Exception ex) when (ex.GetType().Name == "NavigationException")
@@ -1366,7 +1531,7 @@
         }
         catch (Exception ex)
         {
-            await resultModal.ShowError("Error Inesperado", "OcurriÛ un error inesperado.", ex.Message);
+            await resultModal.ShowError("Error Inesperado", "Ocurri√≥ un error inesperado.", ex.Message);
         }
         finally
         {

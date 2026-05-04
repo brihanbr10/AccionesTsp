@@ -1,4 +1,4 @@
-namespace ActividadApp.Services.Email;
+﻿namespace ActividadApp.Services.Email;
 
 public interface IEmailService
 {
@@ -16,6 +16,9 @@ public interface IEmailService
 
     Task<bool> EnviarAccionCerrada(string destinatarioEmail, string destinatarioNombre,
         string consecutivo, string proceso, string descripcion, bool eficaz);
+
+    Task<bool> EnviarActividadEjecutada(string destinatarioEmail, string destinatarioNombre,
+        string consecutivo, string proceso, string descripcionActividad, DateTime fechaEjecucion);
 
     Task<bool> EnviarRecordatorio(string destinatarioEmail, string destinatarioNombre,
         string consecutivo, string proceso, string descripcion, string estado, int diasPendiente);

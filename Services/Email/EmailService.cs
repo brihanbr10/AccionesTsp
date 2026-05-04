@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Mail;
 using Microsoft.Extensions.Options;
 
@@ -17,37 +17,43 @@ public class EmailService : IEmailService
 
     private Task<bool> EnviarCorreo(string destinatarioEmail, string asunto, string cuerpoHtml)
     {
-        // Fire-and-forget para no bloquear la interfaz de usuario si el servidor SMTP no responde
-        _ = Task.Run(async () =>
+        try
         {
-            try
+            using var client = new SmtpClient(_settings.SmtpServer, _settings.SmtpPort)
             {
-                using var client = new SmtpClient(_settings.SmtpServer, _settings.SmtpPort)
-                {
-                    Credentials = new NetworkCredential(_settings.SenderEmail, _settings.Password),
-                    EnableSsl = _settings.UseSsl,
-                    Timeout = 10000 // 10 segundos
-                };
+                Credentials = new NetworkCredential(_settings.SenderEmail, _settings.Password),
+                EnableSsl = _settings.UseSsl,
+                Timeout = 10000
+            };
 
-                var message = new MailMessage
-                {
-                    From = new MailAddress(_settings.SenderEmail, _settings.SenderName),
-                    Subject = asunto,
-                    Body = cuerpoHtml,
-                    IsBodyHtml = true
-                };
-                message.To.Add(new MailAddress(destinatarioEmail));
+            using var message = new MailMessage
+            {
+                From = new MailAddress(_settings.SenderEmail, _settings.SenderName),
+                Subject = asunto,
+                Body = cuerpoHtml,
+                IsBodyHtml = true
+            };
+            message.To.Add(new MailAddress(destinatarioEmail));
 
-                await client.SendMailAsync(message);
+            return client.SendMailAsync(message).ContinueWith(task =>
+            {
+                if (task.IsFaulted)
+                {
+                    _logger.LogError(task.Exception, "Error al enviar correo a {Email}: {Asunto}", destinatarioEmail, asunto);
+                    return false;
+                }
+
                 _logger.LogInformation("Correo enviado a {Email}: {Asunto}", destinatarioEmail, asunto);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al enviar correo a {Email}: {Asunto}", destinatarioEmail, asunto);
-            }
-        });
+                return true;
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al preparar correo a {Email}: {Asunto}", destinatarioEmail, asunto);
+            return Task.FromResult(false);
+        }
 
-        return Task.FromResult(true);
+
     }
 
     public async Task<bool> EnviarAccionCreada(string destinatarioEmail, string destinatarioNombre,
@@ -87,6 +93,14 @@ public class EmailService : IEmailService
     {
         var (asunto, cuerpo) = EmailTemplates.AccionCerrada(
             destinatarioNombre, consecutivo, proceso, descripcion, eficaz);
+        return await EnviarCorreo(destinatarioEmail, asunto, cuerpo);
+    }
+
+    public async Task<bool> EnviarActividadEjecutada(string destinatarioEmail, string destinatarioNombre,
+        string consecutivo, string proceso, string descripcionActividad, DateTime fechaEjecucion)
+    {
+        var (asunto, cuerpo) = EmailTemplates.ActividadEjecutada(
+            destinatarioNombre, consecutivo, proceso, descripcionActividad, fechaEjecucion);
         return await EnviarCorreo(destinatarioEmail, asunto, cuerpo);
     }
 

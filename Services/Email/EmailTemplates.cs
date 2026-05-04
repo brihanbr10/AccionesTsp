@@ -1,4 +1,4 @@
-namespace ActividadApp.Services.Email;
+﻿namespace ActividadApp.Services.Email;
 
 public static class EmailTemplates
 {
@@ -155,6 +155,23 @@ public static class EmailTemplates
             )}
             <p style='margin-top:16px;'>{Badge("Cerrada", "#198754")}</p>";
         return (asunto, BaseLayout("Accion Cerrada", contenido));
+    }
+
+    public static (string asunto, string cuerpo) ActividadEjecutada(
+        string nombre, string consecutivo, string proceso, string descripcionActividad, DateTime fechaEjecucion)
+    {
+        var asunto = $"Actividad ejecutada - Accion {consecutivo}";
+        var contenido = $@"
+            <p>Estimado(a) <strong>{nombre}</strong>,</p>
+            <p>Se ha registrado la ejecución de una actividad del plan de acción:</p>
+            {InfoTable(
+                ("Accion", consecutivo),
+                ("Proceso", proceso),
+                ("Actividad", descripcionActividad),
+                ("Fecha ejecucion", fechaEjecucion.ToString("dd/MM/yyyy"))
+            )}
+            <p style='margin-top:16px;'>{Badge("Actividad ejecutada", "#198754")}</p>";
+        return (asunto, BaseLayout("Actividad Ejecutada", contenido));
     }
 
     public static (string asunto, string cuerpo) Recordatorio(

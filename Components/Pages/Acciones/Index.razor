@@ -1,4 +1,4 @@
-@page "/acciones"
+ï»¿@page "/acciones"
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 @inject AccionService ActividadService
@@ -19,14 +19,14 @@
             <span class="input-group-text">
                 <i class="bi bi-search"></i>
             </span>
-            <input type="text" class="form-control" placeholder="Filtrar por código..." 
+            <input type="text" class="form-control" placeholder="Filtrar por cÃ³digo..." 
                    @bind="filtroId" @bind:event="oninput" />
         </div>
         <a href="/reportes" class="btn btn-outline-success">
             <i class="bi bi-file-earmark-spreadsheet me-1"></i>Reportes
         </a>
         <a href="/acciones/create" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Nueva Acción
+            <i class="bi bi-plus-circle"></i> Nueva AcciÃ³n
         </a>
     </div>
 </div>
@@ -44,7 +44,7 @@ else if (!acciones.Any())
 {
     <div class="alert alert-info">
         <h4 class="alert-heading">No hay acciones</h4>
-        <p>Aún no has creado ninguna acción. Haz clic en "Nueva Acción" para comenzar.</p>
+        <p>AÃºn no has creado ninguna acciÃ³n. Haz clic en "Nueva AcciÃ³n" para comenzar.</p>
     </div>
 }
 else
@@ -81,7 +81,7 @@ else
                         <!-- Informacion General -->
                         <div class="card mb-3">
                             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                                <span><i class="bi bi-info-circle me-2"></i>Información General</span>
+                                <span><i class="bi bi-info-circle me-2"></i>InformaciÃ³n General</span>
                                 <div>
                                     <a href="/acciones/edit/@accion.Id" class="btn btn-sm btn-light me-1">
                                         <i class="bi bi-pencil"></i> Seguimiento
@@ -102,11 +102,11 @@ else
                                         <span>@accion.Fecha.ToString("dd/MM/yyyy")</span>
                                     </div>
                                     <div class="col-md-4 mb-2">
-                                        <strong class="d-block text-muted small">Tipo de Acción</strong>
+                                        <strong class="d-block text-muted small">Tipo de AcciÃ³n</strong>
                                         <span>@TipoAccionTexto(accion.TipoAccionId)</span>
                                     </div>
                                     <div class="col-md-4 mb-2">
-                                        <strong class="d-block text-muted small">Organización</strong>
+                                        <strong class="d-block text-muted small">OrganizaciÃ³n</strong>
                                         <span>@NombreMaestro(organizaciones, accion.OrganizacionId)</span>
                                     </div>
                                     <div class="col-md-4 mb-2">
@@ -126,7 +126,7 @@ else
                                         <span>@NombreMaestro(entidades, accion.EntidadId)</span>
                                     </div>
                                     <div class="col-md-4 mb-2">
-                                        <strong class="d-block text-muted small">Sistema de Gestión</strong>
+                                        <strong class="d-block text-muted small">Sistema de GestiÃ³n</strong>
                                         <span>@NombreMaestro(sistemasGestion, accion.SistemaGestionId)</span>
                                     </div>
                                     <div class="col-md-4 mb-2">
@@ -134,7 +134,7 @@ else
                                         <span>@NombreMaestro(sitios, accion.SitioId)</span>
                                     </div>
                                     <div class="col-md-12 mt-2">
-                                        <strong class="d-block text-muted small">Descripción del hallazgo</strong>
+                                        <strong class="d-block text-muted small">DescripciÃ³n del hallazgo</strong>
                                         <span>@accion.Descripcion</span>
                                     </div>
                                 </div>
@@ -144,19 +144,19 @@ else
                         <!-- Solucion -->
                         <div class="card mb-3">
                             <div class="card-header bg-success text-white">
-                                <i class="bi bi-lightbulb me-2"></i>Solución
+                                <i class="bi bi-lightbulb me-2"></i>SoluciÃ³n
                             </div>
                             <div class="card-body">
                                 @if (accion.Solucion != null)
                                 {
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <p><strong>Corrección Propuesta:</strong> @accion.Solucion.CorreccionPropuesta</p>
-                                            <p><strong>Análisis de Causa:</strong> @accion.Solucion.AnalisisCausa</p>
+                                            <p><strong>CorrecciÃ³n Propuesta:</strong> @accion.Solucion.CorreccionPropuesta</p>
+                                            <p><strong>AnÃ¡lisis de Causa:</strong> @accion.Solucion.AnalisisCausa</p>
                                         </div>
                                         <div class="col-md-6">
                                             <p><strong>Investigador:</strong> @(accion.Solucion.UsuarioInvestiga?.Username ?? "-")</p>
-                                            <p><strong>Fecha Investigación:</strong> @accion.Solucion.FechaInvestigacion.ToString("dd/MM/yyyy")</p>
+                                            <p><strong>Fecha InvestigaciÃ³n:</strong> @accion.Solucion.FechaInvestigacion.ToString("dd/MM/yyyy")</p>
                                             <p><strong>Coordinador:</strong> @(accion.Solucion.UsuarioCoordina?.Username ?? "-")</p>
                                             <p><strong>Fecha Compromiso:</strong> @accion.Solucion.FechaCompromiso.ToString("dd/MM/yyyy")</p>
                                         </div>
@@ -177,7 +177,7 @@ else
                                                         <th>Fecha compromiso</th>
                                                         <th>Observaciones</th>
                                                         <th>Estado</th>
-                                                        <th>Ejecución</th>
+                                                        <th>EjecuciÃ³n</th>
                                                         <th>Evidencia</th>
                                                     </tr>
                                                 </thead>
@@ -189,8 +189,38 @@ else
                                                             <td>@actividad.Agencia</td>
                                                             <td>@(actividad.Responsable?.Username ?? "-")</td>
                                                             <td>@actividad.Fecha.ToString("dd/MM/yyyy")</td>
+                                                            <td>@(actividad.Ejecutada && actividad.FechaEjecucion.HasValue ? actividad.FechaEjecucion.Value.ToString("dd/MM/yyyy") : "-")</td>
                                                             <td>
-                                                                <small>@(string.IsNullOrEmpty(actividad.Observaciones) ? "-" : actividad.Observaciones)</small>
+                                                                @{
+                                                                    var seguimientos = actividad.Seguimientos?
+                                                                        .OrderByDescending(s => s.Fecha)
+                                                                        .ToList() ?? new List<SeguimientoActividad>();
+                                                                }
+
+                                                                @if (seguimientos.Count > 1)
+                                                                {
+                                                                    <div>
+                                                                        <button type="button" class="btn btn-sm btn-outline-secondary mt-1" @onclick="() => AbrirObservacionesActividad(actividad)">
+                                                                            Ver observaciones (@seguimientos.Count)
+                                                                        </button>
+                                                                    </div>
+                                                                }
+                                                                else if (seguimientos.Count == 1)
+                                                                {
+                                                                    <small>
+                                                                        <div class="fw-semibold">@(seguimientos[0].Usuario?.Nombre ?? "-")</div>
+                                                                        <div class="text-muted small">@seguimientos[0].Fecha.ToString("dd/MM/yyyy HH:mm")</div>
+                                                                        <div>@seguimientos[0].Comentario</div>
+                                                                    </small>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <small>
+                                                                        @(string.IsNullOrWhiteSpace(actividad.Observaciones)
+                                                                            ? "No tiene observaciones aÃºn"
+                                                                            : actividad.Observaciones)
+                                                                    </small>
+                                                                }
                                                             </td>
                                                             <td>
                                                                 <span class="badge @(actividad.Ejecutada ? "bg-success" : "bg-warning text-dark")">
@@ -219,7 +249,7 @@ else
                                 }
                                 else
                                 {
-                                    <p class="text-muted fst-italic mb-0">Sin solución registrada.</p>
+                                    <p class="text-muted fst-italic mb-0">Sin soluciÃ³n registrada.</p>
                                 }
                             </div>
                         </div>
@@ -227,7 +257,7 @@ else
                         <!-- Confirmacion Plan de Accion -->
                         <div class="card mb-3">
                             <div class="card-header bg-warning text-dark">
-                                <i class="bi bi-clipboard-check me-2"></i>Confirmación del Plan de Acción
+                                <i class="bi bi-clipboard-check me-2"></i>ConfirmaciÃ³n del Plan de AcciÃ³n
                             </div>
                             <div class="card-body">
                                 @if (accion.ConfirmacionPlanAccion != null)
@@ -240,7 +270,7 @@ else
                                         <div class="col-md-6">
                                             <p><strong>Responsable:</strong> @(accion.ConfirmacionPlanAccion.Responsable?.Username ?? "-")</p>
                                             <p>
-                                                <strong>Cumplió el Plan:</strong>
+                                                <strong>CumpliÃ³ el Plan:</strong>
                                                 @if (accion.ConfirmacionPlanAccion.CumplioPlan)
                                                 {
                                                     <span class="badge bg-success">Si</span>
@@ -255,7 +285,7 @@ else
                                 }
                                 else
                                 {
-                                    <p class="text-muted fst-italic mb-0">Sin confirmación registrada.</p>
+                                    <p class="text-muted fst-italic mb-0">Sin confirmaciÃ³n registrada.</p>
                                 }
                             </div>
                         </div>
@@ -290,7 +320,7 @@ else
                                 }
                                 else
                                 {
-                                    <p class="text-muted fst-italic mb-0">Sin evaluación de eficacia.</p>
+                                    <p class="text-muted fst-italic mb-0">Sin evaluaciÃ³n de eficacia.</p>
                                 }
                             </div>
                         </div>
@@ -326,17 +356,61 @@ else
     </div>
 }
 
+@if (showObservacionesModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Observaciones de la actividad</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarObservacionesActividad"></button>
+                </div>
+                <div class="modal-body">
+                    @if (actividadObservacionesSeleccionada != null)
+                    {
+                        <p class="mb-2"><strong>Actividad:</strong> @actividadObservacionesSeleccionada.Descripcion</p>
+                        @if (observacionesActividadSeleccionada.Any())
+                        {
+                            <div class="list-group">
+                                @foreach (var seg in observacionesActividadSeleccionada)
+                                {
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-start gap-3">
+                                            <div>
+                                                <div class="fw-semibold">@(seg.Usuario?.Nombre ?? "-")</div>
+                                                <div class="text-muted small">@seg.Fecha.ToString("dd/MM/yyyy HH:mm")</div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">@seg.Comentario</div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted mb-0">No tiene observaciones aÃºn.</p>
+                        }
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CerrarObservacionesActividad">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @if (showDeleteModal)
 {
     <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Confirmar Eliminación</h5>
+                    <h5 class="modal-title">Confirmar EliminaciÃ³n</h5>
                     <button type="button" class="btn-close" @onclick="CloseDeleteModal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>¿Estás seguro de que deseas eliminar esta acción?</p>
+                    <p>Â¿EstÃ¡s seguro de que deseas eliminar esta acciÃ³n?</p>
                     @if (actividadToDelete != null)
                     {
                         <p><strong>ACC-@actividadToDelete.Id:</strong> @actividadToDelete.Descripcion</p>
@@ -356,6 +430,9 @@ else
     private bool isLoading = true;
     private bool showDeleteModal = false;
     private Accion? actividadToDelete;
+    private bool showObservacionesModal = false;
+    private Actividad? actividadObservacionesSeleccionada;
+    private List<SeguimientoActividad> observacionesActividadSeleccionada = new();
     private string filtroId = string.Empty;
 
     // Listas para resolver nombres
@@ -417,8 +494,8 @@ else
     private string BadgeEstado(int estadoId) => estadoId switch
     {
         1 => "bg-secondary",          // Abierta sin Plan
-        2 => "bg-primary",            // Abierta con Solución
-        3 => "bg-warning text-dark",  // Abierta por Confirmación
+        2 => "bg-primary",            // Abierta con SoluciÃ³n
+        3 => "bg-warning text-dark",  // Abierta por ConfirmaciÃ³n
         4 => "bg-info text-dark",     // Pendiente por Eficacia
         5 => "bg-success",            // Cerrada
         _ => "bg-secondary"
@@ -434,6 +511,22 @@ else
     {
         showDeleteModal = false;
         actividadToDelete = null;
+    }
+
+    private void AbrirObservacionesActividad(Actividad actividad)
+    {
+        actividadObservacionesSeleccionada = actividad;
+        observacionesActividadSeleccionada = actividad.Seguimientos?
+            .OrderByDescending(s => s.Fecha)
+            .ToList() ?? new List<SeguimientoActividad>();
+        showObservacionesModal = true;
+    }
+
+    private void CerrarObservacionesActividad()
+    {
+        showObservacionesModal = false;
+        actividadObservacionesSeleccionada = null;
+        observacionesActividadSeleccionada.Clear();
     }
 
     private async Task ConfirmDelete()

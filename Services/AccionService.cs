@@ -1,4 +1,4 @@
-using ActividadApp.Data;
+Ôªøusing ActividadApp.Data;
 using ActividadApp.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -25,6 +25,8 @@ public class AccionService
                 .Include(a => a.Proceso)
                 .Include(a => a.Solucion)
                     .ThenInclude(s => s.Actividades)
+                        .ThenInclude(act => act.Seguimientos)
+                            .ThenInclude(seg => seg.Usuario)
                 .Include(a => a.Solucion)
                     .ThenInclude(s => s.UsuarioInvestiga)
                 .Include(a => a.Solucion)
@@ -54,6 +56,8 @@ public class AccionService
                 .Include(a => a.Proceso)
                 .Include(a => a.Solucion)
                     .ThenInclude(s => s.Actividades)
+                        .ThenInclude(act => act.Seguimientos)
+                            .ThenInclude(seg => seg.Usuario)
                 .Include(a => a.Solucion)
                     .ThenInclude(s => s.UsuarioInvestiga)
                 .Include(a => a.Solucion)
@@ -80,8 +84,8 @@ public class AccionService
         if (accion.Solucion != null
             && accion.Solucion.Actividades != null
             && accion.Solucion.Actividades.Any()
-            && accion.Solucion.Actividades.All(a => a.Ejecutada)) return 3; // Abierta por ConfirmaciÛn
-        if (accion.Solucion != null) return 2;                    // Abierta con SoluciÛn
+            && accion.Solucion.Actividades.All(a => a.Ejecutada)) return 3; // Abierta por Confirmaci√≥n
+        if (accion.Solucion != null) return 2;                    // Abierta con Soluci√≥n
         return 1;                                                 // Abierta sin Plan
     }
 
