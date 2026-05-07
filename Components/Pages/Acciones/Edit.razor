@@ -512,7 +512,7 @@
 
 
         <!-- SEGUIMIENTO SGI (Solo administradores) -->
-        @if (esAdmin && accion?.Solucion != null && accion.Solucion.Actividades?.Any() == true)
+        @if (esAdmin && accion?.Solucion != null && todasActividadesEjecutadas)
         {
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
@@ -586,7 +586,7 @@
         }
 
 
-        @if (tieneSolucionGuardada)
+        @if (tieneSolucionGuardada && tieneSeguimientoSgiGuardado)
         {
         <!-- SECCION 3: Confirmación del Plan de Acción -->
         <div class="card shadow-sm mb-4">
@@ -823,6 +823,7 @@
 
     private bool tieneSolucionGuardada = false;
     private bool tieneConfirmacionGuardada = false;
+    private bool tieneSeguimientoSgiGuardado =false;
     private int estadoAnterior = 0;
 
     private bool todasActividadesEjecutadas => actividades.Any() && actividades.All(a => a.Ejecutada);
@@ -885,6 +886,10 @@
 
             // Precargar seguimientos SGI
             seguimientosSgi = accion.SeguimientosSgi ?? new();
+            if (seguimientosSgi.Count > 0)
+            {
+                tieneSeguimientoSgiGuardado = true;
+            }
 
             // Precargar responsable del proceso
             var proceso = procesos.FirstOrDefault(p => p.Id == accion.ProcesoId);
@@ -1025,7 +1030,7 @@
     private async Task ConfirmarEjecutada()
     {
         if (!actividadIndexConfirm.HasValue) return;
-        
+
         var act = actividades[actividadIndexConfirm.Value];
         if (act.FechaEjecucion == null)
         {
@@ -1114,9 +1119,9 @@
         StateHasChanged();
 
         try
-         {
-             // Usar siempre los días seleccionados actualmente
-             var seguimiento = new SeguimientoSgi
+        {
+            // Usar siempre los días seleccionados actualmente
+            var seguimiento = new SeguimientoSgi
              {
                  AccionId = accion.Id,
                  UsuarioId = userSession.UserId,
@@ -1124,8 +1129,8 @@
                  Comentario = nuevoComentarioSgi.Trim()
              };
 
-             DbContext.SeguimientosSgi.Add(seguimiento);
-             await DbContext.SaveChangesAsync();
+            DbContext.SeguimientosSgi.Add(seguimiento);
+            await DbContext.SaveChangesAsync();
 
             nuevoComentarioSgi = string.Empty;
             errorMessage = string.Empty;
@@ -1137,6 +1142,8 @@
                 .Include(s => s.Usuario)
                 .OrderByDescending(s => s.Fecha)
                 .ToListAsync();
+
+            tieneSeguimientoSgiGuardado = seguimientosSgi.Any();
 
             StateHasChanged();
 
@@ -1182,7 +1189,7 @@
             var seguimiento = new SeguimientoActividad
             {
                 ActividadId = actividadId,
-                UsuarioId = userSession.UserId,
+               UsuarioId = userSession.UserId,
                 Fecha = DateTime.UtcNow,
                 Comentario = nuevosComentariosActividad[actividadIndex].Trim()
             };

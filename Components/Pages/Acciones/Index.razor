@@ -254,6 +254,30 @@ else
                             </div>
                         </div>
 
+                        <!-- Seguimiento SGI -->
+                        @if (accion.SeguimientosSgi != null && accion.SeguimientosSgi.Any())
+                        {
+                            <div class="card mb-3">
+                                <div class="card-header bg-dark text-white">
+                                    <i class="bi bi-journal-text me-2"></i>Seguimiento SGI
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="list-group list-group-flush">
+                                        @foreach (var seg in accion.SeguimientosSgi.OrderByDescending(s => s.Fecha))
+                                        {
+                                            <div class="list-group-item">
+                                                <p class="mb-1">@seg.Comentario</p>
+                                                <small class="text-muted">
+                                                    <i class="bi bi-person me-1"></i>@(seg.Usuario?.Nombre ?? "-")
+                                                    <i class="bi bi-calendar ms-2 me-1"></i>@seg.Fecha.ToString("dd/MM/yyyy HH:mm")
+                                                </small>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
                         <!-- Confirmacion Plan de Accion -->
                         <div class="card mb-3">
                             <div class="card-header bg-warning text-dark">
@@ -325,29 +349,7 @@ else
                             </div>
                         </div>
 
-                        <!-- Seguimiento SGI -->
-                        @if (accion.SeguimientosSgi != null && accion.SeguimientosSgi.Any())
-                        {
-                        <div class="card mb-3">
-                            <div class="card-header bg-dark text-white">
-                                <i class="bi bi-journal-text me-2"></i>Seguimiento SGI
-                            </div>
-                            <div class="card-body p-0">
-                                <div class="list-group list-group-flush">
-                                    @foreach (var seg in accion.SeguimientosSgi.OrderByDescending(s => s.Fecha))
-                                    {
-                                        <div class="list-group-item">
-                                            <p class="mb-1">@seg.Comentario</p>
-                                            <small class="text-muted">
-                                                <i class="bi bi-person me-1"></i>@(seg.Usuario?.Nombre ?? "-")
-                                                <i class="bi bi-calendar ms-2 me-1"></i>@seg.Fecha.ToString("dd/MM/yyyy HH:mm")
-                                            </small>
-                                        </div>
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                        }
+                    
 
                     </div>
                 </div>
