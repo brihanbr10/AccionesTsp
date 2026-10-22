@@ -1,16 +1,20 @@
-@page "/"
+锘緻page "/"
 @page "/login"
 @layout AuthLayout
 @inject AuthService AuthService
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
 
-<PageTitle>Iniciar Sesion</PageTitle>
+<PageTitle>Herramienta de Gesti贸n Integral de Acciones</PageTitle>
 
 <div class="auth-container">
     <div class="auth-card">
         <div class="auth-left">
             <div class="auth-illustration">
+                <div class="auth-brand">
+                <img src="img/tsp-logo.jpg" alt="TSP S谩nchez Polo" />
+                <span>Herramienta de Gesti贸n Integral de Acciones</span>
+            </div>
                 <svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
                     <defs>
                         <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -86,6 +90,7 @@
         </div>
         
         <div class="auth-right">
+            
             <h1 class="auth-title">Bienvenido</h1>
             <p class="auth-subtitle">Ingresa tus credenciales para continuar</p>
 
@@ -116,11 +121,11 @@
                     @if (isLoading)
                     {
                         <span class="spinner-border spinner-border-sm"></span>
-                        <span>Iniciando sesi髇...</span>
+                        <span>Iniciando sesi贸n...</span>
                     }
                     else
                     {
-                        <span>Iniciar sesi髇</span>
+                        <span>Iniciar sesi贸n</span>
                     }
                 </button>
             </EditForm>

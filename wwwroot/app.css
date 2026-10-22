@@ -1,4 +1,4 @@
-html, body {
+﻿html, body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     height: 100%;
 }
@@ -15,7 +15,32 @@ main {
 
 .navbar-brand {
     font-weight: 600;
-    font-size: 1.5rem;
+    font-size: 1.1rem;
+}
+
+.app-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    max-width: min(520px, 65vw);
+    white-space: normal;
+    line-height: 1.2;
+}
+
+.app-brand img {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.home-logo {
+    display: block;
+    width: min(300px, 80vw);
+    height: 180px;
+    object-fit: contain;
+    margin: 0 auto 1.5rem;
 }
 
 .card {

@@ -1,4 +1,4 @@
-@inherits LayoutComponentBase
+﻿@inherits LayoutComponentBase
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.EntityFrameworkCore
 @inject AuthenticationStateProvider AuthStateProvider
@@ -13,7 +13,10 @@
     <div class="page">
         <header class="navbar navbar-expand-lg navbar-dark bg-primary">
             <div class="container-fluid">
-                <a class="navbar-brand" href="/home">ActividadApp</a>
+                <a class="navbar-brand app-brand" href="/home" title="Herramienta de Gestión Integral de Acciones">
+                    <img src="img/tsp-logo.jpg" alt="TSP Sánchez Polo" />
+                    <span>Herramienta de Gestión Integral de Acciones</span>
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
